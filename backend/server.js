@@ -13,11 +13,17 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const db = mysql.createConnection({
-// ... (lanjutannya sama kayak yang lama)
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'db_kost_dykaya'
+    // Sekarang ambil dari Environment Variables Vercel
+    host: process.env.DB_HOST,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    port: process.env.DB_PORT || 4000,
+    
+    // --- INI YANG WAJIB ADA UNTUK TIDB CLOUD ---
+    ssl: {
+        rejectUnauthorized: false 
+    }
 });
 
 db.connect((err) => {
@@ -283,7 +289,6 @@ app.post('/api/expenses', (req, res) => {
     });
 });
 
-<<<<<<< HEAD
 // ==========================================
 // API UNTUK MANAJEMEN KAMAR (CRUD ROOMS)
 // ==========================================
@@ -353,8 +358,6 @@ app.delete('/api/rooms/:id', (req, res) => {
 
 
 
-=======
->>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
 app.listen(PORT, () => {
     console.log(`Server jalan di http://localhost:${PORT}`);
 });
