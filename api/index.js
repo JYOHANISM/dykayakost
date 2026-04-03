@@ -71,14 +71,27 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/register', (req, res) => {
     const { nama, email, password, no_hp } = req.body;
-    const checkSql = "SELECT * FROM users WHERE email = ?";
+    
+    // 1. Cek apakah email sudah ada
+    const checkSql = "SELECT id FROM users WHERE email = ?"; 
     db.query(checkSql, [email], (err, data) => {
-        if (err) return res.status(500).json("Error server");
-        if (data.length > 0) return res.json({ status: "Fail", message: "Email sudah terdaftar!" });
+        if (err) {
+            console.error("❌ Error saat cek email:", err);
+            return res.status(500).json({ status: "Error", message: "Gagal cek database" });
+        }
 
+        // Kalau data ditemukan > 0, baru kirim gagal
+        if (data && data.length > 0) {
+            return res.json({ status: "Fail", message: "Email ini sudah dipakai, Bro!" });
+        }
+
+        // 2. Kalau aman, baru hajar Insert
         const insertSql = "INSERT INTO users (nama_lengkap, email, password, no_hp, role) VALUES (?, ?, ?, ?, 'penyewa')";
         db.query(insertSql, [nama, email, password, no_hp], (err, result) => {
-            if (err) return res.status(500).json("Gagal register");
+            if (err) {
+                console.error("❌ Error saat simpan user:", err);
+                return res.status(500).json({ status: "Error", message: "Gagal mendaftarkan akun" });
+            }
             return res.json({ status: "Success", message: "Akun berhasil dibuat!" });
         });
     });
