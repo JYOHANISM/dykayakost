@@ -58,9 +58,17 @@ const AdminDashboard = () => {
     try {
         if (['approved', 'waiting_payment', 'rejected'].includes(type)) {
             await fetch(`/api/transactions/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: type}) });
-        } else if (type === 'delete') {
-            await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
-        } else if (type === 'expense') {
+        } 
+        // --- INI BAGIAN YANG DIGANTI/DIPERBAIKI ---
+        else if (type === 'delete') {
+            console.log("Menghapus Transaksi ID:", id); 
+            await fetch(`/api/transactions/${id}`, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } 
+        // ------------------------------------------
+        else if (type === 'expense') {
             await fetch('/api/expenses', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newExpense) });
         } else if (type === 'add_room') {
             await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
@@ -82,10 +90,12 @@ const AdminDashboard = () => {
             await fetch('/api/rooms/update-tipe', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editTipe) });
         }
 
+        // Tutup modal dan refresh data
         setModalConfig({ ...modalConfig, isOpen: false }); 
         fetchData();
     } catch (error) { 
-        alert("Gagal memproses data."); 
+        console.error("Error saat eksekusi aksi:", error);
+        alert("Gagal memproses data. Cek koneksi server."); 
     }
   };
 

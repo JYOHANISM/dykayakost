@@ -76,14 +76,34 @@ app.put('/api/rooms/:id', (req, res) => {
     });
 });
 
-// 5. DELETE ROOM
-app.delete('/api/rooms/:id', (req, res) => {
-    db.query("DELETE FROM rooms WHERE id=?", [req.params.id], (err, result) => {
+// HAPUS TRANSAKSI (DI API/INDEX.JS)
+app.delete('/api/transactions/:id', (req, res) => {
+    const { id } = req.params;
+
+    // 1. Cari dulu room_id-nya sebelum dihapus biar bisa kita balikin status kamarnya
+    const sqlGetRoom = "SELECT room_id FROM transactions WHERE id = ?";
+    
+    db.query(sqlGetRoom, [id], (err, data) => {
         if (err) return res.status(500).json(err);
-        return res.json({ status: "Success" });
+        
+        if (data.length > 0) {
+            const roomId = data[0].room_id;
+
+            // 2. Hapus transaksinya
+            db.query("DELETE FROM transactions WHERE id = ?", [id], (errDelete) => {
+                if (errDelete) return res.status(500).json(errDelete);
+
+                // 3. Update status kamar jadi tersedia lagi
+                db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [roomId], (errUpdate) => {
+                    return res.json({ status: "Success", message: "Data berhasil dihapus dan kamar dikosongkan" });
+                });
+            });
+        } else {
+            // Kalau data transaksi gak ketemu, mungkin sudah terhapus
+            return res.status(404).json({ message: "Data tidak ditemukan" });
+        }
     });
 });
-
 // 6. LOGIN
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
