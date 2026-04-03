@@ -106,10 +106,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
+      {/* SIDEBAR */}
       <aside className="w-72 bg-slate-900 text-white hidden md:flex flex-col fixed h-full z-20 shadow-2xl">
         <div className="p-8 pb-4">
-            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-tighter">DYKAYA ADMIN</h1>
-            <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Management System</p>
+            {/* FIX: Nama Brand & Sistem jadi Putih Polos */}
+            <h1 className="text-2xl font-black text-white tracking-tighter uppercase">DYKAYA ADMIN</h1>
+            <p className="text-xs text-white/60 mt-1 uppercase tracking-widest font-bold">Management System</p>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
           {[ { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'kamar', label: 'Data Kamar', icon: Home }, { id: 'penghuni', label: 'Data Penghuni', icon: Users }, { id: 'keluhan', label: 'Keluhan', icon: Wrench, count: complaints.filter(c=>c.status==='pending').length }, { id: 'keuangan', label: 'Keuangan', icon: DollarSign } ].map((menu) => (
@@ -145,20 +147,19 @@ const AdminDashboard = () => {
                     <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center"><AlertTriangle size={32}/></div>
                     <div><p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Keluhan Aktif</p><h3 className="text-3xl font-black text-slate-800">{complaints.filter(c => c.status === 'pending').length}</h3></div>
                 </div>
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-3xl shadow-lg text-white flex items-center gap-4">
+                {/* FIX: Ganti Gradient jadi Solid Blue */}
+                <div className="bg-blue-600 p-6 rounded-3xl shadow-lg text-white flex items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><Wallet size={32}/></div>
                     <div><p className="text-blue-100 text-xs font-bold uppercase tracking-wider">Profit Bersih</p><h3 className="text-3xl font-black">Rp {(profit/1000000).toFixed(1)}Jt</h3></div>
                 </div>
              </div>
         )}
 
+        {/* DATA KAMAR */}
         {activeTab === 'kamar' && (
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
                 <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                    <div>
-                        <h3 className="font-bold text-lg text-slate-800">Daftar Kamar</h3>
-                        <p className="text-xs text-slate-500 mt-1">Kelola per tipe atau per unit.</p>
-                    </div>
+                    <div><h3 className="font-bold text-lg text-slate-800">Daftar Kamar</h3><p className="text-xs text-slate-500 mt-1">Kelola per tipe atau per unit.</p></div>
                     <button onClick={openAddRoomModal} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition shadow-md"><PlusCircle size={16}/> Kamar / Tipe Baru</button>
                 </div>
                 <table className="w-full text-left border-collapse">
@@ -186,7 +187,7 @@ const AdminDashboard = () => {
                                             <button key={room.id} onClick={() => openEditRoomModal(room)} className={`relative group px-4 py-3 rounded-2xl flex flex-col items-center justify-center gap-1 border-2 transition-all hover:-translate-y-1 hover:shadow-lg ${room.status === 'tersedia' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : room.status === 'terisi' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
                                                 <span className="text-lg font-black">{room.nomor_kamar}</span>
                                                 <span className="text-[10px] font-bold uppercase tracking-wider bg-white/50 px-2 py-0.5 rounded-md">{room.status}</span>
-                                                <div className="absolute -top-3 -right-3 bg-blue-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Edit2 size={12}/></div>
+                                                <div className="absolute -top-3 -right-3 bg-blue-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"><Edit2 size={12}/></div>
                                             </button>
                                         ))}
                                         <button onClick={() => {
@@ -204,8 +205,9 @@ const AdminDashboard = () => {
             </div>
         )}
 
+        {/* DATA PENGHUNI */}
         {activeTab === 'penghuni' && (
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
                         <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
@@ -221,7 +223,7 @@ const AdminDashboard = () => {
                                     <td className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">{item.nomor_kamar}</div><div className="text-[10px] font-bold text-slate-400 uppercase">{item.tipe_kamar}</div></div></td>
                                     <td className="p-6"><div className="text-lg font-bold text-slate-800">{displayName}</div><div className="text-slate-500 text-xs">{displayPhone}</div></td>
                                     <td className="p-6">
-                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${item.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : item.status_verifikasi === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${item.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
                                             {item.status_verifikasi === 'approved' ? `Lunas (${item.sisa_hari} Hari)` : item.status_verifikasi}
                                         </span>
                                     </td>
@@ -240,8 +242,9 @@ const AdminDashboard = () => {
             </div>
         )}
 
+        {/* KELUHAN */}
         {activeTab === 'keluhan' && (
-            <div className="grid gap-4 animate-fade-in">
+            <div className="grid gap-4">
                 {complaints.map(c => (
                     <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
                         <div className="flex gap-4 items-start">
@@ -254,8 +257,9 @@ const AdminDashboard = () => {
             </div>
         )}
 
+        {/* KEUANGAN */}
         {activeTab === 'keuangan' && (
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 <div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div>
                 <table className="w-full text-sm"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody>{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table>
             </div>
