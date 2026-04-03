@@ -53,44 +53,26 @@ app.post('/api/rooms', (req, res) => {
     });
 });
 
-// 3. EDIT SATU KAMAR (VERSI LENGKAP: HARGA, NAMA, DESKRIPSI)
-app.put('/api/rooms/:id', (req, res) => {
-    const { id } = req.params;
-    // Ambil semua data yang dikirim dari form frontend
-    const { nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status } = req.body;
-    
-    // Pastikan urutan parameter [?] sama dengan urutan di db.query
-    const sql = `
-        UPDATE rooms 
-        SET nomor_kamar = ?, 
-            tipe_kamar = ?, 
-            harga_bulanan = ?, 
-            fasilitas = ?, 
-            status = ? 
-        WHERE id = ?`;
+// --- BAGIAN MANAGEMENT KAMAR ---
 
-    db.query(sql, [nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status, id], (err, result) => {
-        if (err) {
-            console.error("❌ Error Update Room:", err);
-            return res.status(500).json({ error: "Gagal update detail kamar", detail: err });
-        }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Kamar tidak ditemukan" });
-        }
-
-        console.log(`✅ Kamar ID ${id} berhasil diupdate!`);
-        return res.json({ status: "Success", message: "Data kamar berhasil diperbarui" });
-    });
-});
-
-// 4. EDIT TIPE KAMAR (BULK UPDATE)
+// 1. UPDATE TIPE (MASSAL) - TARUH DI ATAS!
 app.put('/api/rooms/update-tipe', (req, res) => {
     const { tipe_kamar_lama, tipe_kamar_baru, harga_bulanan, fasilitas, foto_kamar } = req.body;
     const sql = "UPDATE rooms SET tipe_kamar=?, harga_bulanan=?, fasilitas=?, foto_kamar=? WHERE tipe_kamar=?";
     db.query(sql, [tipe_kamar_baru, harga_bulanan, fasilitas, foto_kamar, tipe_kamar_lama], (err, result) => {
         if (err) return res.status(500).json(err);
-        return res.json({ status: "Success", message: "Tipe kamar berhasil diupdate" });
+        return res.json({ status: "Success" });
+    });
+});
+
+// 2. UPDATE SATU KAMAR (BERDASARKAN ID) - TARUH DI BAWAHNYA!
+app.put('/api/rooms/:id', (req, res) => {
+    const { id } = req.params;
+    const { nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status } = req.body;
+    const sql = "UPDATE rooms SET nomor_kamar=?, tipe_kamar=?, harga_bulanan=?, fasilitas=?, status=? WHERE id=?";
+    db.query(sql, [nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status, id], (err, result) => {
+        if (err) return res.status(500).json(err);
+        return res.json({ status: "Success" });
     });
 });
 
