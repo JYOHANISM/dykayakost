@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Home, AlertCircle, CheckCircle, ArrowLeft, Wrench, Send, XCircle, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle } from 'lucide-react';
+import { LogOut, Calendar, Home, AlertCircle, ArrowLeft, Wrench, Send, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle } from 'lucide-react';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ const UserDashboard = () => {
   const userName = localStorage.getItem('userName') || 'Penghuni';
   const userId = localStorage.getItem('userId');
 
-  // Menggunakan warna background solid
   const bankList = [
     { id: 'bca', name: 'BCA', number: '8210-1234-5678', holder: 'DYKAYA KOST', color: 'bg-blue-600' },
     { id: 'bri', name: 'BRI', number: '0021-01-000001-30-0', holder: 'IBU KOST', color: 'bg-blue-800' },
@@ -128,7 +127,6 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
-      {/* Background Header */}
       <div className="bg-slate-900 h-64 w-full absolute top-0 left-0 z-0 rounded-b-[3rem] shadow-2xl overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
@@ -181,7 +179,7 @@ const UserDashboard = () => {
                                     </div>
                                 )}
                                 {selectedBank && (
-                                    <div className="mb-6"><label className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-50 ${fileBukti ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-300'}`}><input type="file" accept="image/*" onChange={handleFileChange} className="hidden"/>{previewBukti ? (<><img src={previewBukti} alt="Preview" className="h-32 rounded-lg object-cover mb-2"/><span className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle size={14}/> Foto Terpilih</span></>) : (<><Upload size={24} className="text-slate-400 mb-2"/><span className="text-sm font-bold text-slate-600">Upload Bukti Transfer</span></>)}</label></div>
+                                    <div className="mb-6"><label className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-50 ${fileBukti ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-300'}`}><input type="file" accept="image/*" onChange={handleFileChange} className="hidden"/>{previewBukti ? (<><img src={previewBukti} alt="Preview" className="h-32 rounded-lg object-cover mb-2"/><span className="text-xs font-bold text-emerald-600 flex items-center gap-1">Foto Terpilih</span></>) : (<><Upload size={24} className="text-slate-400 mb-2"/><span className="text-sm font-bold text-slate-600">Upload Bukti Transfer</span></>)}</label></div>
                                 )}
                                 <button 
                                   onClick={handleCekBayar} 
@@ -195,7 +193,6 @@ const UserDashboard = () => {
                         {bill.status_verifikasi === 'verification' && (<div className="text-center py-8"><Clock size={40} className="text-purple-600 mx-auto mb-6"/><h2 className="text-2xl font-bold text-slate-900 mb-2">Sedang Diverifikasi</h2><p className="text-slate-500">Admin sedang mengecek bukti transfer Anda. Mohon tunggu sebentar.</p></div>)}
                         {bill.status_verifikasi === 'pending' && (<div className="text-center py-8"><AlertTriangle size={40} className="text-amber-500 mx-auto mb-6"/><h2 className="text-2xl font-bold text-slate-900 mb-2">Menunggu Konfirmasi</h2><p className="text-slate-500">Admin sedang mengecek ketersediaan kamar <strong>{bill.nomor_kamar}</strong>.</p></div>)}
                         
-                        {/* Kartu Status Aktif Warna Solid */}
                         {bill.status_verifikasi === 'approved' && (
                             <div className={`relative rounded-3xl p-8 overflow-hidden text-white shadow-xl ${bill.sisa_hari < 0 ? 'bg-rose-600' : 'bg-slate-900'}`}>
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
@@ -243,7 +240,6 @@ const UserDashboard = () => {
         )}
       </div>
 
-      {/* MODAL KONFIRMASI */}
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsConfirmOpen(false)}></div>
@@ -256,13 +252,12 @@ const UserDashboard = () => {
         </div>
       )}
 
-      {/* MODAL NOTIFIKASI */}
+      {/* MODAL NOTIFIKASI - CheckCircle & XCircle Berhasil Dihapus */}
       {modal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setModal({...modal, isOpen: false})}></div>
             <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 text-center relative z-10 shadow-2xl animate-fade-in-up">
-                <div className="mx-auto mb-6">{modal.type==='success'?<CheckCircle size={32} className="text-emerald-600"/>:<XCircle size={32} className="text-rose-600"/>}</div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">{modal.title}</h3>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2 pt-4">{modal.title}</h3>
                 <p className="text-slate-500 mb-8 text-sm">{modal.message}</p>
                 <button onClick={() => setModal({...modal, isOpen: false})} className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-xl">Mengerti</button>
             </div>
