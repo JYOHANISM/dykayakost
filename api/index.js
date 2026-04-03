@@ -98,16 +98,33 @@ app.post('/api/login', (req, res) => {
 app.post('/api/register', (req, res) => {
     const { nama, email, password, no_hp } = req.body;
     
+    // 1. Pastikan input tidak kosong
+    if (!email || !password) {
+        return res.json({ status: "Fail", message: "Email dan Password wajib diisi!" });
+    }
+
+    // 2. Cek email dengan lebih teliti
     db.query("SELECT id FROM users WHERE email = ?", [email], (err, data) => {
-        if (err) return res.status(500).json({ status: "Error", message: "Database Error" });
-        if (data && data.length > 0) {
-            return res.json({ status: "Fail", message: "Email sudah terdaftar!" });
+        if (err) {
+            console.error("❌ Database Error saat cek email:", err);
+            return res.status(500).json({ status: "Error", message: "Gagal cek database" });
         }
 
-        const sql = "INSERT INTO users (nama_lengkap, email, password, no_hp, role) VALUES (?, ?, ?, ?, 'penyewa')";
-        db.query(sql, [nama, email, password, no_hp], (err, result) => {
-            if (err) return res.status(500).json(err);
-            return res.json({ status: "Success" });
+        // PERBAIKAN: Cek apakah data benar-benar ada isinya
+        if (data && Array.isArray(data) && data.length > 0) {
+            console.log("⚠️ Email sudah ada di DB:", email);
+            return res.json({ status: "Fail", message: "Email ini sudah terdaftar, gunakan email lain." });
+        }
+
+        // 3. Kalau benar-benar kosong, baru Insert
+        const sqlInsert = "INSERT INTO users (nama_lengkap, email, password, no_hp, role) VALUES (?, ?, ?, ?, 'penyewa')";
+        db.query(sqlInsert, [nama, email, password, no_hp], (err, result) => {
+            if (err) {
+                console.error("❌ Error saat Insert User:", err);
+                return res.status(500).json({ status: "Error", message: "Gagal mendaftarkan akun baru." });
+            }
+            console.log("✅ User baru berhasil daftar:", email);
+            return res.json({ status: "Success", message: "Registrasi Berhasil!" });
         });
     });
 });
