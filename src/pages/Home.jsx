@@ -5,19 +5,26 @@ import { useNavigate } from 'react-router-dom';
 const Home = () => {
   const navigate = useNavigate();
   
+  // --- STATE ---
   const [rawRooms, setRawRooms] = useState([]); 
   const [displayTypes, setDisplayTypes] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // STATE POP-UP
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // STATE FORM & ERROR
   const [selectedType, setSelectedType] = useState(null); 
   const [bookingTargetId, setBookingTargetId] = useState(null); 
   const [formData, setFormData] = useState({ nama: '', no_hp: '' });
   const [formError, setFormError] = useState(''); 
+  
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
+  // --- FETCH DATA (URL RELATIF UNTUK VERCEL) ---
   useEffect(() => {
     const savedName = localStorage.getItem('userName');
     const savedRole = localStorage.getItem('userRole');
@@ -26,6 +33,7 @@ const Home = () => {
         setUserRole(savedRole);
     }
 
+    // Ganti localhost jadi /api
     fetch('/api/rooms')
       .then((response) => response.json())
       .then((data) => {
@@ -46,15 +54,19 @@ const Home = () => {
       .catch((error) => console.error("Gagal ambil data:", error));
   }, []);
 
+  // --- HANDLERS ---
   const openBooking = (typeData) => {
     const isLoggedIn = localStorage.getItem('userId');
+    
     if (!isLoggedIn) {
         setShowLoginModal(true); 
         return; 
     }
+
     setSelectedType(typeData);
     setBookingTargetId(typeData.nextAvailableId);
     setFormError(''); 
+    
     const savedName = localStorage.getItem('userName');
     setFormData({ nama: savedName || '', no_hp: '' });
     setIsModalOpen(true);
@@ -65,8 +77,11 @@ const Home = () => {
         setFormError("Nama dan Nomor WhatsApp wajib diisi!");
         return;
     }
+
     const loggedInUserId = localStorage.getItem('userId');
+
     try {
+        // Ganti localhost jadi /api
         const response = await fetch('/api/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -79,6 +94,7 @@ const Home = () => {
             })
         });
         const result = await response.json();
+        
         if(result.status === "Success") {
             setIsModalOpen(false);
             setShowSuccessModal(true); 
@@ -104,15 +120,9 @@ const Home = () => {
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 fixed w-full z-40 top-0 left-0">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <a href="#" className="flex items-center gap-3" onClick={() => window.scrollTo(0,0)}>
-                {/* FIX: MENGGANTI ICON BINTANG DENGAN LOGO BARU KAMU */}
-                <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
-                    <img src="/logo-removebg-preview.png" alt="Logo Dykaya" className="w-full h-full object-contain scale-125" />
-                </div>
-                <div>
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1>
-                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
-                </div>
+            <a href="#" className="flex items-center gap-2" onClick={() => window.scrollTo(0,0)}>
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white"><Star fill="currentColor" className="w-6 h-6" /></div>
+                <div><h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1><p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p></div>
             </a>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
@@ -135,7 +145,7 @@ const Home = () => {
         <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-16 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600 rounded-full blur-[150px] opacity-30 -translate-y-1/2 translate-x-1/3"></div>
           <div className="relative z-10 max-w-2xl">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wide mb-6 uppercase">🏡 Premium Living in Malang</span>
+            <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wide mb-6">PROMO: MAAF LAGI GAADA</span>
             <h2 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">Tempat Tinggal Nyaman<br/> <span className="text-blue-400">Buat Kamu di Malang</span></h2>
             <div className="flex flex-col md:flex-row md:items-center gap-2 text-blue-200 mb-8 font-medium bg-slate-800/50 w-fit px-4 py-2 rounded-lg border border-slate-700"><MapPin size={20} /> <span>Jl. Taman Bunga Merak II No. 62, Lowokwaru</span></div>
             <a href="#katalog" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl md:rounded-full font-bold transition inline-block">Cari Kamar</a>
@@ -187,11 +197,11 @@ const Home = () => {
                     <h2 className="text-2xl font-bold mb-6">KOST <span className="text-blue-500">DYKAYA</span></h2>
                     <p className="text-slate-400 mb-8 leading-relaxed max-w-md">Tempat Tinggal Nyaman Buat Kamu di Malang</p>
                     <div className="space-y-4">
-                        <div className="flex items-start gap-4 hover:text-blue-400 transition-colors">
+                        <div className="flex items-start gap-4">
                             <MapPin className="text-blue-400 flex-shrink-0" /> 
                             <span>Jl. Taman Bunga Merak II No.62, Lowokwaru, Malang</span>
                         </div>
-                        <div className="flex items-start gap-4 hover:text-blue-400 transition-colors">
+                        <div className="flex items-start gap-4">
                             <Phone className="text-blue-400 flex-shrink-0" /> 
                             <span>0812-3456-7890 (Ibu Kost)</span>
                         </div>
@@ -201,7 +211,7 @@ const Home = () => {
                     <iframe title="Lokasi" src="https://maps.google.com/maps?q=Malang&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
                 </div>
             </div>
-            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang. All Rights Reserved.</div>
+            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang.</div>
         </div>
       </footer>
 
