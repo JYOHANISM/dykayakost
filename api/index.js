@@ -53,14 +53,34 @@ app.post('/api/rooms', (req, res) => {
     });
 });
 
-// 3. EDIT SATU KAMAR (INI YANG TADI HILANG BRO!)
+// 3. EDIT SATU KAMAR (VERSI LENGKAP: HARGA, NAMA, DESKRIPSI)
 app.put('/api/rooms/:id', (req, res) => {
     const { id } = req.params;
-    const { nomor_kamar, status } = req.body;
-    const sql = "UPDATE rooms SET nomor_kamar = ?, status = ? WHERE id = ?";
-    db.query(sql, [nomor_kamar, status, id], (err, result) => {
-        if (err) return res.status(500).json(err);
-        return res.json({ status: "Success", message: "Kamar berhasil diupdate" });
+    // Ambil semua data yang dikirim dari form frontend
+    const { nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status } = req.body;
+    
+    // Pastikan urutan parameter [?] sama dengan urutan di db.query
+    const sql = `
+        UPDATE rooms 
+        SET nomor_kamar = ?, 
+            tipe_kamar = ?, 
+            harga_bulanan = ?, 
+            fasilitas = ?, 
+            status = ? 
+        WHERE id = ?`;
+
+    db.query(sql, [nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status, id], (err, result) => {
+        if (err) {
+            console.error("❌ Error Update Room:", err);
+            return res.status(500).json({ error: "Gagal update detail kamar", detail: err });
+        }
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Kamar tidak ditemukan" });
+        }
+
+        console.log(`✅ Kamar ID ${id} berhasil diupdate!`);
+        return res.json({ status: "Success", message: "Data kamar berhasil diperbarui" });
     });
 });
 
