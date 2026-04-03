@@ -27,7 +27,7 @@ const AdminDashboard = () => {
 
   const openStatusModal = (id, status) => {
     let title = '', msg = '';
-    if (status === 'waiting_payment') { title = 'Konfirmasi Ketersediaan?'; msg = 'User akan diminta melakukan pembayaran (WhatsApp).'; }
+    if (status === 'waiting_payment') { title = 'Konfirmasi Ketersediaan?'; msg = 'User akan diminta melakukan pembayaran.'; }
     else if (status === 'approved') { title = 'Terima Pembayaran?'; msg = 'Argo sewa akan DIMULAI dari sekarang.'; }
     else if (status === 'rejected') { title = 'Tolak Pesanan?'; msg = 'Pesanan akan dibatalkan permanen.'; }
     setModalConfig({ isOpen: true, type: status, id: id, title, message: msg, data: null });
@@ -72,11 +72,7 @@ const AdminDashboard = () => {
             await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
         } 
         else if (type === 'edit_room') {
-            await fetch(`/api/rooms/${id}`, { 
-                method: 'PUT', 
-                headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify(newRoom) 
-            });
+            await fetch(`/api/rooms/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
         } 
         else if (type === 'delete_room') {
             await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
@@ -93,31 +89,20 @@ const AdminDashboard = () => {
     }
   };
 
-  // DI ADMIN DASHBOARD (FRONTEND)
-const handleStatusComplaint = async (id, status) => { 
+  const handleStatusComplaint = async (id, status) => { 
     try {
         const res = await fetch(`/api/complaints/${id}`, { 
             method: 'PUT', 
             headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ status: status }) // Status di sini isinya 'selesai'
+            body: JSON.stringify({ status: status }) 
         });
-        
         const result = await res.json();
-        
-        if (result.status === "Success") {
-            // Refresh data setelah berhasil
-            fetchData(); 
-        } else {
-            alert("Gagal merubah status: " + result.message);
-        }
-    } catch (error) {
-        console.error("Error update keluhan:", error);
-        alert("Koneksi server bermasalah.");
-    }
-};
+        if (result.status === "Success") fetchData(); 
+    } catch (error) { console.error(error); }
+  };
 
   const handleLogout = () => { localStorage.clear(); navigate('/login'); };
-  const profit = bookings.filter(b => b.status_verifikasi === 'approved').reduce((t, i) => t + parseInt(i.harga_bulanan), 0) - expenses.reduce((t, i) => t + parseInt(i.biaya), 0);
+  const profit = bookings.filter(b => b.status_verifikasi === 'approved').reduce((t, i) => t + parseInt(i.harga_bulanan || 0), 0) - expenses.reduce((t, i) => t + parseInt(i.biaya || 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
@@ -172,7 +157,7 @@ const handleStatusComplaint = async (id, status) => {
                 <div className="flex justify-between items-center p-6 border-b border-slate-100">
                     <div>
                         <h3 className="font-bold text-lg text-slate-800">Daftar Kamar</h3>
-                        <p className="text-xs text-slate-500 mt-1">Gunakan tombol edit di tipe atau di nomor kamar.</p>
+                        <p className="text-xs text-slate-500 mt-1">Kelola per tipe atau per unit.</p>
                     </div>
                     <button onClick={openAddRoomModal} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition shadow-md"><PlusCircle size={16}/> Kamar / Tipe Baru</button>
                 </div>
@@ -190,9 +175,7 @@ const handleStatusComplaint = async (id, status) => {
                                 <td className="p-6">
                                     <div className="flex items-center gap-2">
                                         <div className="font-bold text-slate-800 text-xl tracking-tight">{tipe}</div>
-                                        <button onClick={() => openEditTipeModal(tipe, data.harga, data.fasilitas, data.list[0]?.foto_kamar)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition" title="Edit Massal Tipe Ini">
-                                            <Edit2 size={16}/>
-                                        </button>
+                                        <button onClick={() => openEditTipeModal(tipe, data.harga, data.fasilitas, data.list[0]?.foto_kamar)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition"><Edit2 size={16}/></button>
                                     </div>
                                     <div className="text-blue-600 font-bold mt-1">Rp {parseInt(data.harga).toLocaleString()} / bln</div>
                                     <div className="text-xs text-slate-500 mt-2 leading-relaxed">Fasilitas: {data.fasilitas}</div>
@@ -200,18 +183,18 @@ const handleStatusComplaint = async (id, status) => {
                                 <td className="p-6">
                                     <div className="flex flex-wrap gap-3">
                                         {data.list.map(room => (
-                                            <button key={room.id} onClick={() => openEditRoomModal(room)} 
-                                                className={`relative group px-4 py-3 rounded-2xl flex flex-col items-center justify-center gap-1 border-2 transition-all hover:-translate-y-1 hover:shadow-lg
-                                                ${room.status === 'tersedia' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                                                  room.status === 'terisi' ? 'bg-rose-50 border-rose-100 text-rose-700' :
-                                                  'bg-amber-50 border-amber-100 text-amber-700'}`}>
+                                            <button key={room.id} onClick={() => openEditRoomModal(room)} className={`relative group px-4 py-3 rounded-2xl flex flex-col items-center justify-center gap-1 border-2 transition-all hover:-translate-y-1 hover:shadow-lg ${room.status === 'tersedia' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : room.status === 'terisi' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
                                                 <span className="text-lg font-black">{room.nomor_kamar}</span>
                                                 <span className="text-[10px] font-bold uppercase tracking-wider bg-white/50 px-2 py-0.5 rounded-md">{room.status}</span>
-                                                <div className="absolute -top-3 -right-3 bg-blue-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
-                                                    <Edit2 size={12}/>
-                                                </div>
+                                                <div className="absolute -top-3 -right-3 bg-blue-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Edit2 size={12}/></div>
                                             </button>
                                         ))}
+                                        <button onClick={() => {
+                                            setNewRoom({ nomor_kamar: '', tipe_kamar: tipe, harga_bulanan: data.harga, fasilitas: data.fasilitas, status: 'tersedia', foto_kamar: data.list[0]?.foto_kamar || '' });
+                                            setModalConfig({ isOpen: true, type: 'add_room', id: null, title: `Tambah ${tipe}`, message: 'Masukkan nomor kamar baru:', data: null });
+                                        }} className="px-4 py-3 rounded-2xl flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-300 text-slate-400 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50 transition-all">
+                                            <PlusCircle size={20} className="mb-1"/><span className="text-[10px] font-bold uppercase tracking-wider">Tambah</span>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -235,39 +218,19 @@ const handleStatusComplaint = async (id, status) => {
                             if (match) { displayName = match[1]; displayPhone = match[2]; }
                             return (
                                 <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
+                                    <td className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">{item.nomor_kamar}</div><div className="text-[10px] font-bold text-slate-400 uppercase">{item.tipe_kamar}</div></div></td>
+                                    <td className="p-6"><div className="text-lg font-bold text-slate-800">{displayName}</div><div className="text-slate-500 text-xs">{displayPhone}</div></td>
                                     <td className="p-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex flex-col items-center justify-center">
-                                                <span className="text-sm font-bold">{item.nomor_kamar}</span>
-                                            </div>
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{item.tipe_kamar}</div>
-                                        </div>
-                                    </td>
-                                    <td className="p-6">
-                                        <div className="text-lg font-bold text-slate-800">{displayName}</div>
-                                        <div className="text-slate-500 text-xs font-medium">{displayPhone}</div>
-                                    </td>
-                                    <td className="p-6">
-                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
-                                            item.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                                            item.status_verifikasi === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                            item.status_verifikasi === 'verification' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                                            'bg-blue-100 text-blue-700 border-blue-200'
-                                        }`}>
+                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${item.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : item.status_verifikasi === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
                                             {item.status_verifikasi === 'approved' ? `Lunas (${item.sisa_hari} Hari)` : item.status_verifikasi}
                                         </span>
                                     </td>
                                     <td className="p-6 flex justify-center gap-2">
-                                        {item.status_verifikasi === 'pending' && (
-                                            <button onClick={() => openStatusModal(item.id, 'waiting_payment')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-md">Ada Kamar</button>
-                                        )}
+                                        {item.status_verifikasi === 'pending' && <button onClick={() => openStatusModal(item.id, 'waiting_payment')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Ada Kamar</button>}
                                         {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
-                                            <>
-                                                <button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200" title="Lihat Bukti"><Eye size={16}/></button>
-                                                <button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-md">Terima</button>
-                                            </>
+                                            <><button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg"><Eye size={16}/></button><button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button></>
                                         )}
-                                        <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 bg-white border border-slate-200 text-rose-500 rounded-lg hover:bg-rose-50" title="Hapus"><Trash2 size={16}/></button>
+                                        <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
                                     </td>
                                 </tr>
                             );
@@ -277,80 +240,83 @@ const handleStatusComplaint = async (id, status) => {
             </div>
         )}
 
-        {activeTab === 'keluhan' && (<div className="grid gap-4 animate-fade-in">{complaints.map(c => (<div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center"><div className="flex gap-4 items-start"><div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div><div><h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4><p className="text-sm text-slate-500 mt-1">{c.isi_keluhan}</p><div className="text-xs text-slate-400 mt-2 font-bold uppercase">{c.nama_lengkap} • Kamar {c.nomor_kamar}</div></div></div>{c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai</span>}</div>))}</div>)}
-        {activeTab === 'keuangan' && (<div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 animate-fade-in"><div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div><table className="w-full text-sm"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody>{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table></div>)}
-
-        {modalConfig.isOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={()=>setModalConfig({...modalConfig, isOpen:false})}></div>
-                <div className={`bg-white w-full ${modalConfig.type === 'view_proof' ? 'max-w-lg' : 'max-w-md'} rounded-[2rem] p-8 relative z-10 shadow-2xl`}>
-                    <h3 className="text-xl font-bold mb-2 text-slate-900">{modalConfig.title}</h3>
-                    <p className="mb-6 text-slate-500 text-sm">{modalConfig.message}</p>
-                    
-                    {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl overflow-hidden border">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto object-contain" alt="Bukti"/> : <div className="p-8 text-center text-slate-400">Belum ada bukti upload.</div>}</div>)}
-                    
-                    {(modalConfig.type === 'add_room' || modalConfig.type === 'edit_room') && (
-                        <div className="space-y-3 mb-6 overflow-y-auto max-h-[60vh] px-2">
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Nomor Kamar</label>
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" placeholder="Contoh: 101" value={newRoom.nomor_kamar} onChange={e=>setNewRoom({...newRoom, nomor_kamar: e.target.value})}/>
-                            
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Tipe Kamar</label>
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="VIP / Standard / Ekonomi" value={newRoom.tipe_kamar} onChange={e=>setNewRoom({...newRoom, tipe_kamar: e.target.value})}/>
-                            
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Harga Bulanan</label>
-                            <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="900000" value={newRoom.harga_bulanan} onChange={e=>setNewRoom({...newRoom, harga_bulanan: e.target.value})}/>
-                            
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Fasilitas</label>
-                            <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl text-sm" placeholder="Contoh: WiFi, Kasur, Lemari" value={newRoom.fasilitas} onChange={e=>setNewRoom({...newRoom, fasilitas: e.target.value})}></textarea>
-                            
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Link Foto Kamar</label>
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl text-xs font-mono" placeholder="https://..." value={newRoom.foto_kamar} onChange={e=>setNewRoom({...newRoom, foto_kamar: e.target.value})}/>
-                            
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Status</label>
-                            <select className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newRoom.status} onChange={e=>setNewRoom({...newRoom, status: e.target.value})}>
-                                <option value="tersedia">Tersedia</option>
-                                <option value="terisi">Terisi</option>
-                                <option value="perbaikan">Sedang Perbaikan</option>
-                            </select>
+        {activeTab === 'keluhan' && (
+            <div className="grid gap-4 animate-fade-in">
+                {complaints.map(c => (
+                    <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+                        <div className="flex gap-4 items-start">
+                            <div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div>
+                            <div><h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4><p className="text-sm text-slate-500">{c.isi_keluhan}</p><div className="text-xs text-slate-400 mt-2 font-bold uppercase">{c.nama_lengkap} • Kamar {c.nomor_kamar}</div></div>
                         </div>
-                    )}
-
-                    {modalConfig.type === 'edit_tipe' && (
-                        <div className="space-y-3 mb-6">
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Nama Tipe Kamar</label>
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" value={editTipe.tipe_kamar_baru} onChange={e=>setEditTipe({...editTipe, tipe_kamar_baru: e.target.value})}/>
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Harga (Bulk)</label>
-                            <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.harga_bulanan} onChange={e=>setEditTipe({...editTipe, harga_bulanan: e.target.value})}/>
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Fasilitas (Bulk)</label>
-                            <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl h-24" value={editTipe.fasilitas} onChange={e=>setEditTipe({...editTipe, fasilitas: e.target.value})}></textarea>
-                            <label className="block text-xs font-bold text-slate-400 uppercase">Link Foto</label>
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.foto_kamar} onChange={e=>setEditTipe({...editTipe, foto_kamar: e.target.value})}/>
-                        </div>
-                    )}
-
-                    {modalConfig.type === 'expense' && (
-                        <div className="space-y-3 mb-6">
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Nama Pengeluaran" value={newExpense.nama} onChange={e=>setNewExpense({...newExpense, nama: e.target.value})}/>
-                            <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Biaya" value={newExpense.biaya} onChange={e=>setNewExpense({...newExpense, biaya: e.target.value})}/>
-                            <input type="date" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newExpense.tanggal} onChange={e=>setNewExpense({...newExpense, tanggal: e.target.value})}/>
-                        </div>
-                    )}
-
-                    {modalConfig.type === 'delete' && <div className="text-rose-500 font-bold mb-6">Tindakan ini tidak dapat dibatalkan.</div>}
-                    {modalConfig.type === 'delete_room' && <div className="text-rose-500 font-bold mb-6">Seluruh riwayat kamar ini akan dihapus.</div>}
-
-                    <div className="flex gap-3 mt-8">
-                        <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
-                        {modalConfig.type !== 'view_proof' && (
-                            <button onClick={confirmAction} className={`flex-1 py-4 text-white rounded-xl font-bold shadow-lg ${modalConfig.type.includes('delete') ? 'bg-rose-600' : 'bg-blue-600'}`}>
-                                {modalConfig.type.includes('delete') ? 'Hapus' : 'Konfirmasi'}
-                            </button>
-                        )}
+                        {c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai ✅</span>}
                     </div>
-                </div>
+                ))}
+            </div>
+        )}
+
+        {activeTab === 'keuangan' && (
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 animate-fade-in">
+                <div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div>
+                <table className="w-full text-sm"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody>{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table>
             </div>
         )}
       </main>
+
+      {/* MODAL SECTION */}
+      {modalConfig.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={()=>setModalConfig({...modalConfig, isOpen:false})}></div>
+            <div className={`bg-white w-full ${modalConfig.type === 'view_proof' ? 'max-w-lg' : 'max-w-md'} rounded-[2rem] p-8 relative z-10 shadow-2xl`}>
+                <h3 className="text-xl font-bold mb-2 text-slate-900">{modalConfig.title}</h3>
+                <p className="mb-6 text-slate-500 text-sm">{modalConfig.message}</p>
+                
+                {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl overflow-hidden border">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto" alt="Bukti"/> : <div className="p-8 text-center text-slate-400">Belum ada bukti.</div>}</div>)}
+                
+                {(modalConfig.type === 'add_room' || modalConfig.type === 'edit_room') && (
+                    <div className="space-y-3 mb-6 overflow-y-auto max-h-[60vh] px-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Nomor Kamar</label>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" value={newRoom.nomor_kamar} onChange={e=>setNewRoom({...newRoom, nomor_kamar: e.target.value})}/>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Tipe Kamar</label>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newRoom.tipe_kamar} onChange={e=>setNewRoom({...newRoom, tipe_kamar: e.target.value})}/>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Harga Bulanan</label>
+                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newRoom.harga_bulanan} onChange={e=>setNewRoom({...newRoom, harga_bulanan: e.target.value})}/>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Fasilitas</label>
+                        <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl text-sm h-24" value={newRoom.fasilitas} onChange={e=>setNewRoom({...newRoom, fasilitas: e.target.value})}></textarea>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Link Foto Kamar</label>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl text-xs" value={newRoom.foto_kamar} onChange={e=>setNewRoom({...newRoom, foto_kamar: e.target.value})}/>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Status</label>
+                        <select className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" value={newRoom.status} onChange={e=>setNewRoom({...newRoom, status: e.target.value})}><option value="tersedia">Tersedia</option><option value="terisi">Terisi</option><option value="perbaikan">Perbaikan</option></select>
+                    </div>
+                )}
+
+                {modalConfig.type === 'edit_tipe' && (
+                    <div className="space-y-3 mb-6">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Nama Tipe Kamar</label>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" value={editTipe.tipe_kamar_baru} onChange={e=>setEditTipe({...editTipe, tipe_kamar_baru: e.target.value})}/>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Harga (Bulk)</label>
+                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.harga_bulanan} onChange={e=>setEditTipe({...editTipe, harga_bulanan: e.target.value})}/>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Fasilitas (Bulk)</label>
+                        <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl h-24 text-sm" value={editTipe.fasilitas} onChange={e=>setEditTipe({...editTipe, fasilitas: e.target.value})}></textarea>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase">Link Foto</label>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl text-xs" value={editTipe.foto_kamar} onChange={e=>setEditTipe({...editTipe, foto_kamar: e.target.value})}/>
+                    </div>
+                )}
+
+                {modalConfig.type === 'expense' && (
+                    <div className="space-y-3 mb-6">
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Nama Pengeluaran" value={newExpense.nama} onChange={e=>setNewExpense({...newExpense, nama: e.target.value})}/>
+                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Biaya (Rp)" value={newExpense.biaya} onChange={e=>setNewExpense({...newExpense, biaya: e.target.value})}/>
+                        <input type="date" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newExpense.tanggal} onChange={e=>setNewExpense({...newExpense, tanggal: e.target.value})}/>
+                    </div>
+                )}
+
+                <div className="flex gap-3 mt-4">
+                    <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
+                    {modalConfig.type !== 'view_proof' && <button onClick={confirmAction} className={`flex-1 py-4 text-white rounded-xl font-bold shadow-lg ${modalConfig.type.includes('delete') ? 'bg-rose-600' : 'bg-blue-600'}`}>{modalConfig.type.includes('delete') ? 'Hapus' : 'Konfirmasi'}</button>}
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
