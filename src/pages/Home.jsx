@@ -1,29 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Zap, Phone, Wifi, Car, Utensils, ShieldCheck, Menu, X, User, BedDouble, Lock, CheckCircle, AlertCircle, ArrowRight, XCircle } from 'lucide-react';
+import { MapPin, Star, XCircle, ChevronRight, Zap, Phone, Wifi, Car, Utensils, ShieldCheck, Menu, X, User, BedDouble, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const navigate = useNavigate();
+  
+  // --- STATE ---
   const [rawRooms, setRawRooms] = useState([]); 
   const [displayTypes, setDisplayTypes] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // STATE POP-UP
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // STATE FORM & ERROR
   const [selectedType, setSelectedType] = useState(null); 
   const [bookingTargetId, setBookingTargetId] = useState(null); 
   const [formData, setFormData] = useState({ nama: '', no_hp: '' });
   const [formError, setFormError] = useState(''); 
+  
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
+  // --- FETCH DATA (URL RELATIF UNTUK VERCEL) ---
   useEffect(() => {
     const savedName = localStorage.getItem('userName');
     const savedRole = localStorage.getItem('userRole');
-    if (savedName) { setCurrentUser(savedName); setUserRole(savedRole); }
+    if (savedName) {
+        setCurrentUser(savedName);
+        setUserRole(savedRole);
+    }
 
+    // Ganti localhost jadi /api
     fetch('/api/rooms')
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         setRawRooms(data); 
         const grouped = {};
@@ -39,264 +51,230 @@ const Home = () => {
         });
         setDisplayTypes(Object.values(grouped));
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => console.error("Gagal ambil data:", error));
   }, []);
 
+  // --- HANDLERS ---
   const openBooking = (typeData) => {
     const isLoggedIn = localStorage.getItem('userId');
-    if (!isLoggedIn) { setShowLoginModal(true); return; }
+    
+    if (!isLoggedIn) {
+        setShowLoginModal(true); 
+        return; 
+    }
+
     setSelectedType(typeData);
     setBookingTargetId(typeData.nextAvailableId);
     setFormError(''); 
+    
     const savedName = localStorage.getItem('userName');
     setFormData({ nama: savedName || '', no_hp: '' });
     setIsModalOpen(true);
   };
 
   const handleSubmitBooking = async () => {
-    if(!formData.nama || !formData.no_hp) { setFormError("Wajib diisi semua ya bro!"); return; }
+    if(!formData.nama || !formData.no_hp) {
+        setFormError("Nama dan Nomor WhatsApp wajib diisi!");
+        return;
+    }
+
     const loggedInUserId = localStorage.getItem('userId');
+
     try {
+        // Ganti localhost jadi /api
         const response = await fetch('/api/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                nama: formData.nama, no_hp: formData.no_hp,
-                room_id: bookingTargetId, tipe_kamar: selectedType.tipe_kamar,
+                nama: formData.nama,
+                no_hp: formData.no_hp,
+                room_id: bookingTargetId, 
+                tipe_kamar: selectedType.tipe_kamar,
                 user_id: loggedInUserId
             })
         });
         const result = await response.json();
+        
         if(result.status === "Success") {
-            setIsModalOpen(false); setShowSuccessModal(true); 
+            setIsModalOpen(false);
+            setShowSuccessModal(true); 
             setFormData({ nama: '', no_hp: '' });
+        } else {
+            setFormError("Gagal booking, coba lagi nanti.");
         }
-    } catch (error) { setFormError("Server error!"); }
+    } catch (error) { 
+        setFormError("Error koneksi ke server!"); 
+    }
+  };
+
+  const handleCloseSuccess = () => {
+    setShowSuccessModal(false);
+    window.location.reload(); 
   };
 
   const dashboardLink = userRole === 'admin' ? '/admin' : '/user';
 
   return (
-    <div className="min-h-screen bg-[#f3f3f3] font-sans text-[#1a1a1a] scroll-smooth selection:bg-yellow-300 selection:text-black uppercase tracking-tight">
-      
-      {/* 1. MARQUEE TOP BAR */}
-      <div className="bg-black text-white py-3 overflow-hidden border-b-4 border-black fixed w-full top-0 z-[60]">
-        <div className="whitespace-nowrap animate-marquee flex gap-12 font-black text-[11px] tracking-[0.3em]">
-          <span>⭐️ DYKAYA KOST MALANG</span>
-          <span>• PREMIUM LIVING SPACE</span>
-          <span>• HARGA MAHASISWA FASILITAS HOTEL</span>
-          <span>• FREE WIFI 100MBPS</span>
-          <span>• CCTV 24 JAM</span>
-          <span>• LOKASI STRATEGIS LOWOKWARU</span>
-          <span>• SISA {rawRooms.filter(r => r.status === 'tersedia').length} UNIT LAGI</span>
-          <span>⭐️ DYKAYA KOST MALANG</span>
-        </div>
-      </div>
-
-      {/* 2. NAVBAR: Neo-Brutalist Style */}
-      <nav className="fixed w-full z-50 top-14 px-6">
-        <div className="max-w-6xl mx-auto bg-white border-4 border-black p-4 flex items-center justify-between shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-            <h1 className="text-2xl font-black italic tracking-tighter uppercase">DYKAYA<span className="text-blue-600">.</span></h1>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 scroll-smooth">
+      {/* NAVBAR */}
+      <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 fixed w-full z-40 top-0 left-0">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <a href="#" className="flex items-center gap-2" onClick={() => window.scrollTo(0,0)}>
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white"><Star fill="currentColor" className="w-6 h-6" /></div>
+                <div><h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1><p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p></div>
+            </a>
           </div>
-          
-          <div className="hidden md:flex items-center gap-8 text-xs font-black uppercase tracking-widest">
-            <a href="#katalog" className="hover:text-blue-600 transition-colors">Availability</a>
-            <a href="#fasilitas" className="hover:text-blue-600 transition-colors">Amenities</a>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
+            <a href="#" className="hover:text-blue-600">Beranda</a>
+            <a href="#fasilitas" className="hover:text-blue-600">Fasilitas</a>
+            <a href="#katalog" className="hover:text-blue-600">Katalog</a>
+            <a href="#lokasi" className="hover:text-blue-600">Lokasi</a>
             {currentUser ? (
-                <a href={dashboardLink} className="bg-yellow-300 border-2 border-black px-5 py-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
-                  DASHBOARD: {currentUser}
-                </a>
+                <a href={dashboardLink} className="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition"><User size={18} /> Halo, {currentUser}</a>
             ) : (
-                <a href="/login" className="bg-blue-600 text-white border-2 border-black px-6 py-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-black transition-all">Login</a>
+                <a href="/login" className="bg-slate-900 text-white px-5 py-2.5 rounded-full hover:bg-slate-800 transition shadow-lg shadow-slate-900/20">Login Penghuni</a>
             )}
           </div>
-          <button className="md:hidden p-2 border-2 border-black" onClick={() => setIsMenuOpen(!isMenuOpen)}><Menu size={24} /></button>
+          <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg" onClick={() => setIsMenuOpen(!isMenuOpen)}>{isMenuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
       </nav>
 
-      {/* 3. HERO: Asymmetric Layout */}
-      <header className="pt-48 pb-20 px-6 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Main Title Box */}
-          <div className="lg:col-span-8 bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-300 border-b-4 border-l-4 border-black flex items-center justify-center -mr-8 -mt-8 rotate-12">
-               <Zap size={40} strokeWidth={3} className="mt-4 mr-4" />
-            </div>
-            <p className="text-blue-600 font-black text-xs mb-4 tracking-[0.3em]">RESIDENCE & CO-LIVING</p>
-            <h2 className="text-6xl md:text-[100px] font-black leading-[0.85] uppercase mb-10">
-              Living <br/> Without <br/> <span className="text-transparent" style={{ WebkitTextStroke: '2px black' }}>Limits.</span>
-            </h2>
-            <div className="flex flex-wrap gap-4">
-              <a href="#katalog" className="bg-black text-white px-10 py-5 font-black text-xl shadow-[6px_6px_0px_0px_rgba(253,224,71,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all uppercase">
-                Find My Room
-              </a>
-            </div>
+      {/* HERO SECTION */}
+      <header className="pt-32 pb-10 px-6 max-w-6xl mx-auto">
+        <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-16 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600 rounded-full blur-[150px] opacity-30 -translate-y-1/2 translate-x-1/3"></div>
+          <div className="relative z-10 max-w-2xl">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wide mb-6">🏡 PROMO: DISKON 5% BULAN PERTAMA</span>
+            <h2 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">Hunian Nyaman di <br/> <span className="text-blue-400">Jantung Kota Malang</span></h2>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 text-blue-200 mb-8 font-medium bg-slate-800/50 w-fit px-4 py-2 rounded-lg border border-slate-700"><MapPin size={20} /> <span>Jl. Taman Bunga Merak II No. 62, Lowokwaru</span></div>
+            <a href="#katalog" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl md:rounded-full font-bold transition inline-block">Cari Kamar</a>
           </div>
-
-          {/* Quick Info Box */}
-          <div className="lg:col-span-4 grid grid-cols-1 gap-6">
-            <div className="bg-emerald-400 border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-end min-h-[200px]">
-               <h3 className="text-5xl font-black italic">100%</h3>
-               <p className="font-bold text-xs">MAHASISWA APPROVED</p>
-            </div>
-            <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center gap-4 group hover:bg-blue-600 hover:text-white transition-all">
-               <MapPin size={32} strokeWidth={3} />
-               <div>
-                  <p className="text-[10px] font-black text-slate-400 group-hover:text-white/70">MALANG CITY</p>
-                  <p className="text-lg font-black leading-none">LOWOKWARU</p>
-               </div>
-            </div>
-          </div>
-
         </div>
       </header>
 
-      {/* 4. AMENITIES: Sharp Box Grid */}
-      <section id="fasilitas" className="max-w-6xl mx-auto px-6 py-20 scroll-mt-24">
-        <div className="grid grid-cols-2 md:grid-cols-4 border-4 border-black bg-black gap-1 shadow-[10px_10px_0px_0px_rgba(16,185,129,1)]">
-            {[
-              { icon: Wifi, label: "FIBER WIFI", color: "bg-white" },
-              { icon: ShieldCheck, label: "SECURE 24/7", color: "bg-yellow-300" },
-              { icon: Utensils, label: "BIG KITCHEN", color: "bg-emerald-400" },
-              { icon: Car, label: "FREE PARKING", color: "bg-white" }
-            ].map((f, i) => (
-              <div key={i} className={`${f.color} p-12 flex flex-col items-center justify-center gap-4 hover:invert transition-all cursor-default`}>
-                <f.icon size={48} strokeWidth={3} />
-                <span className="font-black text-xs tracking-widest">{f.label}</span>
+      {/* FASILITAS */}
+      <section id="fasilitas" className="max-w-6xl mx-auto px-6 py-10 scroll-mt-24">
+        <h3 className="text-xl font-bold text-slate-900 mb-6">Fasilitas Unggulan</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4"><div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><Wifi size={24} /></div><div><h4 className="font-bold text-slate-800">Free WiFi</h4><p className="text-xs text-slate-500">Fiber Cepat</p></div></div>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4"><div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><Utensils size={24} /></div><div><h4 className="font-bold text-slate-800">Dapur</h4><p className="text-xs text-slate-500">Lengkap</p></div></div>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4"><div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center"><Car size={24} /></div><div><h4 className="font-bold text-slate-800">Parkir</h4><p className="text-xs text-slate-500">Luas & Aman</p></div></div>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4"><div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center"><ShieldCheck size={24} /></div><div><h4 className="font-bold text-slate-800">CCTV</h4><p className="text-xs text-slate-500">24 Jam</p></div></div>
+        </div>
+      </section>
+
+      {/* KATALOG */}
+      <section id="katalog" className="max-w-6xl mx-auto px-6 pb-20 scroll-mt-24">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
+          <div><h3 className="text-2xl font-bold text-slate-900">Pilihan Tipe Kamar</h3><p className="text-slate-500 mt-2">Tersedia {rawRooms.filter(r => r.status === 'tersedia').length} unit kamar kosong hari ini.</p></div>
+        </div>
+        {displayTypes.length === 0 ? <div className="text-center py-20 text-slate-400">Loading data kamar...</div> : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {displayTypes.map((type, index) => (
+              <div key={index} className="group bg-white rounded-3xl p-3 border border-slate-100 shadow-xl shadow-slate-200/50 hover:shadow-2xl transition duration-300 relative">
+                <div className="relative h-64 rounded-2xl overflow-hidden mb-5">
+                  <img src={type.foto_kamar} alt={type.tipe_kamar} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                  <div className="absolute top-4 left-4"><span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider backdrop-blur-md border border-white/20 shadow-lg ${type.stokTersedia > 0 ? 'bg-emerald-500/90 text-white' : 'bg-rose-500/90 text-white'}`}>{type.stokTersedia > 0 ? `Tersedia (${type.stokTersedia} Unit)` : 'HABIS TERJUAL'}</span></div>
+                  <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-slate-900 font-bold shadow-lg">Rp {parseInt(type.harga_bulanan).toLocaleString('id-ID')} / bln</div>
+                </div>
+                <div className="px-2 pb-2">
+                  <h4 className="text-xl font-bold text-slate-900 mb-2">{type.tipe_kamar}</h4>
+                  <div className="flex flex-wrap gap-2 mb-6"><span className="text-[10px] font-medium px-2 py-1 rounded bg-blue-50 text-blue-600 flex items-center gap-1"><BedDouble size={12}/> Total {type.totalStok} Kamar</span>{type.fasilitas.split(',').map((feat, idx) => (<span key={idx} className="text-[10px] font-medium px-2 py-1 rounded bg-slate-100 text-slate-600">{feat}</span>))}</div>
+                  <button onClick={() => type.stokTersedia > 0 && openBooking(type)} disabled={type.stokTersedia === 0} className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${type.stokTersedia > 0 ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>{type.stokTersedia > 0 ? 'Pilih Kamar Ini' : 'Stok Habis'}</button>
+                </div>
               </div>
             ))}
-        </div>
+          </div>
+        )}
       </section>
 
-      {/* 5. KATALOG: Brutalist Cards */}
-      <section id="katalog" className="max-w-6xl mx-auto px-6 py-32">
-        <div className="flex items-center gap-6 mb-20">
-          <h3 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">Availability</h3>
-          <div className="h-2 flex-1 bg-black"></div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {displayTypes.map((type, index) => (
-            <div key={index} className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] flex flex-col group hover:translate-x-2 hover:translate-y-2 hover:shadow-none transition-all duration-300">
-              <div className="h-72 border-b-4 border-black overflow-hidden relative">
-                <img src={type.foto_kamar} alt={type.tipe_kamar} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute top-4 right-4 bg-white border-2 border-black px-4 py-2 font-black text-[12px] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                   {type.stokTersedia > 0 ? `${type.stokTersedia} UNITS LEFT` : 'FULL BOOKED'}
-                </div>
-              </div>
-              <div className="p-8 bg-white flex-1 flex flex-col justify-between">
+      {/* FOOTER */}
+      <footer id="lokasi" className="bg-slate-900 text-white py-16 scroll-mt-24">
+        <div className="max-w-6xl mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
-                  <h4 className="text-3xl font-black mb-4 uppercase tracking-tighter">{type.tipe_kamar}</h4>
-                  <div className="flex flex-wrap gap-2 mb-10">
-                    {type.fasilitas.split(',').map((feat, idx) => (
-                      <span key={idx} className="text-[10px] font-black uppercase px-2 py-1 border-2 border-black bg-[#f0f0f0]">{feat.trim()}</span>
-                    ))}
-                  </div>
+                    <h2 className="text-2xl font-bold mb-6">KOST <span className="text-blue-500">DYKAYA</span></h2>
+                    <p className="text-slate-400 mb-8 leading-relaxed max-w-md">Hunian nyaman, aman, dan strategis.</p>
+                    <div className="space-y-4">
+                        <div className="flex items-start gap-4">
+                            <MapPin className="text-blue-400 flex-shrink-0" /> 
+                            <span>Jl. Taman Bunga Merak II No.62, Lowokwaru, Malang</span>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <Phone className="text-blue-400 flex-shrink-0" /> 
+                            <span>0812-3456-7890 (Ibu Kost)</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="space-y-4 pt-6 border-t-2 border-black">
-                  <div className="flex justify-between items-center font-black">
-                    <span className="text-xs text-slate-400">PRICE/MONTH</span>
-                    <span className="text-2xl text-blue-600">Rp {parseInt(type.harga_bulanan).toLocaleString('id-ID')}</span>
-                  </div>
-                  <button 
-                    onClick={() => type.stokTersedia > 0 && openBooking(type)} 
-                    disabled={type.stokTersedia === 0} 
-                    className="w-full bg-black text-white font-black py-5 uppercase tracking-[0.2em] text-sm hover:bg-blue-600 transition-colors disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-300"
-                  >
-                    {type.stokTersedia > 0 ? 'Select This Unit' : 'Sold Out'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 6. FOOTER: High Contrast */}
-      <footer id="lokasi" className="bg-white border-t-4 border-black py-24">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-20">
-            <div>
-                <h2 className="text-6xl font-black italic mb-10 tracking-tighter uppercase underline decoration-yellow-300 decoration-8 underline-offset-4">DYKAYA MALANG</h2>
-                <div className="space-y-6 text-xl font-bold uppercase">
-                    <p className="flex items-start gap-4"> <MapPin strokeWidth={3} className="mt-1" /> Jl. Taman Bunga Merak II No. 62, Malang</p>
-                    <p className="flex items-center gap-4 text-blue-600"> <Phone strokeWidth={3} /> +62 812 3456 7890</p>
+                <div className="h-64 bg-slate-800 rounded-3xl overflow-hidden border-4 border-slate-700">
+                    <iframe title="Lokasi" src="https://maps.google.com/maps?q=Malang&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
                 </div>
             </div>
-            <div className="border-4 border-black shadow-[15px_15px_0px_0px_rgba(59,130,246,1)] h-80 overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000">
-                <iframe title="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15805.992641040854!2d112.6174061!3d-7.9473849!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78827687d272d7%3A0x1042701c9f4d1e2!2sLowokwaru%2C%20Malang%20City%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1712160000000!5m2!1sen!2sid" width="100%" height="100%" style={{border:0}}></iframe>
-            </div>
-        </div>
-        <div className="mt-20 pt-10 border-t-2 border-black text-center font-black text-[10px] tracking-[0.5em] text-slate-300 italic px-6">
-            © 2026 DYKAYA KOST MANAGEMENT • ALL RIGHTS RESERVED
+            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang.</div>
         </div>
       </footer>
 
-      {/* 7. MODALS: Neo-Brutalist Popups */}
-      {isModalOpen && selectedType && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-blue-600/80 backdrop-blur-md" onClick={() => setIsModalOpen(false)}></div>
-            <div className="bg-white border-4 border-black shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] w-full max-w-lg relative z-10 p-10 animate-in zoom-in-95">
-                <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
-                  <h3 className="text-4xl font-black italic uppercase tracking-tighter">CHECK-IN</h3>
-                  <button onClick={() => setIsModalOpen(false)}><X size={32} strokeWidth={3} /></button>
-                </div>
-                <div className="space-y-6">
-                    {formError && <div className="bg-rose-500 text-white p-4 border-4 border-black font-black uppercase text-[10px]">{formError}</div>}
-                    <div>
-                        <label className="text-[10px] font-black uppercase mb-2 block tracking-widest">GUEST NAME</label>
-                        <input type="text" className="w-full border-4 border-black p-4 text-xl font-bold outline-none focus:bg-yellow-50" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} />
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-black uppercase mb-2 block tracking-widest">WHATSAPP NUMBER</label>
-                        <input type="tel" className="w-full border-4 border-black p-4 text-xl font-bold outline-none focus:bg-yellow-50" placeholder="08XXXXXXXXXX" value={formData.no_hp} onChange={(e) => setFormData({...formData, no_hp: e.target.value})} />
-                    </div>
-                    <button onClick={handleSubmitBooking} className="w-full bg-blue-600 text-white font-black py-6 text-xl uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">CONFIRM BOOKING</button>
-                </div>
-            </div>
-        </div>
-      )}
-
+      {/* POP-UPS */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/90" onClick={() => setShowLoginModal(false)}></div>
-            <div className="bg-white border-4 border-black shadow-[15px_15px_0px_0px_rgba(37,99,235,1)] w-full max-w-sm relative z-10 p-12 text-center">
-                <Lock size={60} strokeWidth={3} className="mx-auto mb-6 text-blue-600" />
-                <h3 className="text-3xl font-black italic uppercase mb-2 tracking-tighter">DITOLAK!</h3>
-                <p className="font-bold text-slate-500 mb-8 text-sm italic">LU HARUS LOGIN DULU BRO SEBELUM BOOKING.</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowLoginModal(false)}></div>
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 p-8 text-center animate-fade-in">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6"><Lock size={32} /></div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Akses Terbatas</h3>
+                <p className="text-slate-500 mb-8 text-sm">Silakan Login terlebih dahulu untuk memesan kamar.</p>
                 <div className="flex flex-col gap-3">
-                    <button onClick={() => navigate('/login')} className="w-full bg-black text-white font-black py-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(59,130,246,1)] uppercase tracking-widest text-xs">Login Bro</button>
-                    <button onClick={() => setShowLoginModal(false)} className="font-black text-[10px] uppercase tracking-widest mt-4">Nanti Aja</button>
+                    <button onClick={() => navigate('/login')} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition">Login Sekarang</button>
+                    <button onClick={() => setShowLoginModal(false)} className="w-full text-slate-500 font-bold py-3.5 rounded-xl">Nanti Dulu</button>
                 </div>
             </div>
         </div>
       )}
 
       {showSuccessModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-emerald-500/90 backdrop-blur-md"></div>
-            <div className="bg-white border-4 border-black shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] p-12 text-center max-w-sm relative z-10">
-                <CheckCircle size={60} strokeWidth={3} className="mx-auto mb-6 text-emerald-500" />
-                <h3 className="text-4xl font-black uppercase mb-4 tracking-tighter">DONE!</h3>
-                <p className="font-bold mb-10 italic">BOOKING MASUK. TUNGGUIN WA DARI KITA YA!</p>
-                <button onClick={() => window.location.reload()} className="w-full bg-black text-white py-5 font-black uppercase tracking-widest shadow-[6px_6px_0px_0px_rgba(16,185,129,1)]">MANTAP!</button>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 p-8 text-center animate-fade-in">
+                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={32} /></div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Booking Berhasil!</h3>
+                <p className="text-slate-500 mb-8 text-sm">Admin akan segera menghubungi via WhatsApp untuk konfirmasi.</p>
+                <button onClick={handleCloseSuccess} className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition">OK, Siap!</button>
             </div>
         </div>
       )}
 
-      {/* MARQUEE KEYFRAMES */}
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: inline-flex;
-          animation: marquee 30s linear infinite;
-        }
-      `}</style>
-
+      {isModalOpen && selectedType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-fade-in">
+                <div className="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900">Booking {selectedType.tipe_kamar}</h3>
+                        <p className="text-sm text-green-600 font-medium">Sistem memilihkan unit terbaik untukmu.</p>
+                    </div>
+                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition"><XCircle className="text-slate-400 w-6 h-6" /></button>
+                </div>
+                <div className="p-8 space-y-4">
+                    {formError && (
+                        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl flex items-center gap-2 text-sm font-bold">
+                            <AlertCircle size={16} /> {formError}
+                        </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nama Lengkap</label>
+                            <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">No. WhatsApp</label>
+                            <input type="tel" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" placeholder="08xx-xxxx" value={formData.no_hp} onChange={(e) => setFormData({...formData, no_hp: e.target.value})} />
+                        </div>
+                    </div>
+                    <button type="button" onClick={handleSubmitBooking} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition">Booking Sekarang</button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
