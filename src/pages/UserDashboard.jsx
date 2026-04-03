@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Home, AlertCircle, CheckCircle, ArrowLeft, Wrench, Send, XCircle, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, ShieldCheck, HelpCircle } from 'lucide-react';
+import { LogOut, Calendar, Home, AlertCircle, CheckCircle, ArrowLeft, Wrench, Send, XCircle, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle } from 'lucide-react';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -21,10 +21,11 @@ const UserDashboard = () => {
   const userName = localStorage.getItem('userName') || 'Penghuni';
   const userId = localStorage.getItem('userId');
 
+  // Menggunakan warna background solid
   const bankList = [
-    { id: 'bca', name: 'BCA', number: '8210-1234-5678', holder: 'DYKAYA KOST', color: 'from-blue-600 to-blue-800' },
-    { id: 'bri', name: 'BRI', number: '0021-01-000001-30-0', holder: 'IBU KOST', color: 'from-blue-500 to-indigo-600' },
-    { id: 'dana', name: 'DANA', number: '0812-3456-7890', holder: 'DYKAYA', color: 'from-sky-400 to-blue-500' },
+    { id: 'bca', name: 'BCA', number: '8210-1234-5678', holder: 'DYKAYA KOST', color: 'bg-blue-600' },
+    { id: 'bri', name: 'BRI', number: '0021-01-000001-30-0', holder: 'IBU KOST', color: 'bg-blue-800' },
+    { id: 'dana', name: 'DANA', number: '0812-3456-7890', holder: 'DYKAYA', color: 'bg-sky-500' },
   ];
 
   const fetchData = () => {
@@ -40,7 +41,7 @@ const UserDashboard = () => {
   useEffect(() => { 
     if (!userId) navigate('/login'); 
     else fetchData(); 
-  }, []);
+  }, [userId, navigate]);
 
   const handleLogout = () => { 
     localStorage.clear(); 
@@ -127,6 +128,7 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
+      {/* Background Header */}
       <div className="bg-slate-900 h-64 w-full absolute top-0 left-0 z-0 rounded-b-[3rem] shadow-2xl overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="absolute top-0 left-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
@@ -157,7 +159,21 @@ const UserDashboard = () => {
                                     <div><span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase border border-blue-200">Menunggu Pembayaran</span><h2 className="text-2xl font-bold mt-2 text-slate-900">Selesaikan Pembayaran</h2></div>
                                     <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><CreditCard size={28}/></div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-3 mb-6">{bankList.map((bank) => (<button key={bank.id} onClick={() => setSelectedBank(bank)} className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${selectedBank?.id === bank.id ? 'border-blue-600 bg-blue-50/50 scale-105 shadow-lg shadow-blue-100' : 'border-slate-100 hover:border-blue-200'}`}><div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-[10px] shadow-md bg-gradient-to-br ${bank.color}`}>{bank.name}</div><span className="text-xs font-bold">{bank.name}</span>{selectedBank?.id === bank.id && <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-1"><Check size={12}/></div>}</button>))}</div>
+                                <div className="grid grid-cols-3 gap-3 mb-6">
+                                    {bankList.map((bank) => (
+                                        <button 
+                                            key={bank.id} 
+                                            onClick={() => setSelectedBank(bank)} 
+                                            className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${selectedBank?.id === bank.id ? 'border-blue-600 bg-blue-50/50 scale-105 shadow-lg shadow-blue-100' : 'border-slate-100 hover:border-blue-200 bg-white'}`}
+                                        >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm ${bank.color}`}>
+                                                {bank.name}
+                                            </div>
+                                            <span className="text-xs font-bold text-slate-700">{bank.name}</span>
+                                            {selectedBank?.id === bank.id && <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-1 shadow-md"><Check size={12}/></div>}
+                                        </button>
+                                    ))}
+                                </div>
                                 {selectedBank && (
                                     <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6">
                                         <div className="flex justify-between items-center mb-3"><span className="font-mono text-xl font-bold text-slate-800">{selectedBank.number}</span><button onClick={() => handleCopy(selectedBank.number)} className="text-blue-600 p-2 rounded-lg transition">{copied ? <Check size={18}/> : <Copy size={18}/>}</button></div>
@@ -167,7 +183,6 @@ const UserDashboard = () => {
                                 {selectedBank && (
                                     <div className="mb-6"><label className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-50 ${fileBukti ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-300'}`}><input type="file" accept="image/*" onChange={handleFileChange} className="hidden"/>{previewBukti ? (<><img src={previewBukti} alt="Preview" className="h-32 rounded-lg object-cover mb-2"/><span className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle size={14}/> Foto Terpilih</span></>) : (<><Upload size={24} className="text-slate-400 mb-2"/><span className="text-sm font-bold text-slate-600">Upload Bukti Transfer</span></>)}</label></div>
                                 )}
-                                {/* FIX: Menghapus icon di tombol Konfirmasi agar teks ke tengah */}
                                 <button 
                                   onClick={handleCekBayar} 
                                   disabled={!selectedBank || !fileBukti} 
@@ -179,12 +194,48 @@ const UserDashboard = () => {
                         )}
                         {bill.status_verifikasi === 'verification' && (<div className="text-center py-8"><Clock size={40} className="text-purple-600 mx-auto mb-6"/><h2 className="text-2xl font-bold text-slate-900 mb-2">Sedang Diverifikasi</h2><p className="text-slate-500">Admin sedang mengecek bukti transfer Anda. Mohon tunggu sebentar.</p></div>)}
                         {bill.status_verifikasi === 'pending' && (<div className="text-center py-8"><AlertTriangle size={40} className="text-amber-500 mx-auto mb-6"/><h2 className="text-2xl font-bold text-slate-900 mb-2">Menunggu Konfirmasi</h2><p className="text-slate-500">Admin sedang mengecek ketersediaan kamar <strong>{bill.nomor_kamar}</strong>.</p></div>)}
-                        {bill.status_verifikasi === 'approved' && (<div className={`relative rounded-3xl p-8 overflow-hidden text-white shadow-2xl ${bill.sisa_hari < 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-blue-600 to-indigo-700'}`}><div className="relative z-10 min-h-[150px] flex flex-col justify-between"><div className="flex justify-between items-start"><div><p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-1">Status Tagihan</p><span className="font-bold text-lg tracking-wide">{bill.sisa_hari < 0 ? 'TELAT BAYAR' : 'AKTIF'}</span></div><Calendar className="text-white/80"/></div><div><p className="text-white/60 text-xs font-bold uppercase mb-1">Jatuh Tempo</p><h2 className="text-3xl font-bold tracking-tight">{new Date(bill.jatuh_tempo).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</h2><p className="mt-2 inline-block px-3 py-1 rounded-lg text-xs font-bold bg-white/20 text-white">{bill.sisa_hari < 0 ? `Telat ${Math.abs(bill.sisa_hari)} hari!` : `${bill.sisa_hari} hari lagi`}</p></div></div></div>)}
+                        
+                        {/* Kartu Status Aktif Warna Solid */}
+                        {bill.status_verifikasi === 'approved' && (
+                            <div className={`relative rounded-3xl p-8 overflow-hidden text-white shadow-xl ${bill.sisa_hari < 0 ? 'bg-rose-600' : 'bg-slate-900'}`}>
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
+                                <div className="relative z-10 min-h-[150px] flex flex-col justify-between">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-1">Status Tagihan</p>
+                                            <span className="font-bold text-lg tracking-wide">{bill.sisa_hari < 0 ? 'TELAT BAYAR' : 'AKTIF'}</span>
+                                        </div>
+                                        <Calendar className="text-white/40" size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="text-white/60 text-xs font-bold uppercase mb-1">Jatuh Tempo</p>
+                                        <h2 className="text-3xl font-black tracking-tight">{new Date(bill.jatuh_tempo).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
+                                        <div className="mt-3 inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 border border-white/10 text-white">
+                                            <Clock size={12} className="mr-1.5" />
+                                            {bill.sisa_hari < 0 ? `Telat ${Math.abs(bill.sisa_hari)} hari!` : `${bill.sisa_hari} hari lagi`}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center"><div className="flex items-center gap-3 mb-4"><Home size={20} className="text-blue-600"/><h3 className="font-bold text-slate-800">Detail Kamar</h3></div><div className="flex gap-4"><div className="flex-1 bg-slate-50 p-4 rounded-2xl"><p className="text-xs text-slate-400 font-bold">Nomor</p><p className="text-xl font-bold text-slate-900">{bill.nomor_kamar}</p></div><div className="flex-1 bg-slate-50 p-4 rounded-2xl"><p className="text-xs text-slate-400 font-bold">Tipe</p><p className="text-xl font-bold text-slate-900">{bill.tipe_kamar}</p></div></div></div>
-                    {bill.status_verifikasi === 'approved' && (<div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><div className="flex items-center gap-3 mb-4"><Wrench size={20} className="text-amber-500"/><h3 className="font-bold text-slate-800">Lapor Kerusakan</h3></div><form onSubmit={kirimKeluhan} className="space-y-3"><input type="text" placeholder="Judul (Lampu Mati, dll)" className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={judulKeluhan} onChange={e => setJudulKeluhan(e.target.value)} /><div className="flex gap-2"><input type="text" placeholder="Detail..." className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={isiKeluhan} onChange={e => setIsiKeluhan(e.target.value)}/><button type="submit" className="bg-amber-500 text-white px-4 rounded-xl shadow-lg hover:bg-amber-600 transition"><Send size={18}/></button></div></form></div>)}
+                    {bill.status_verifikasi === 'approved' && (
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                            <div className="flex items-center gap-3 mb-4"><Wrench size={20} className="text-amber-500"/><h3 className="font-bold text-slate-800">Lapor Kerusakan</h3></div>
+                            <form onSubmit={kirimKeluhan} className="space-y-3">
+                                <input type="text" placeholder="Judul (Lampu Mati, dll)" className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={judulKeluhan} onChange={e => setJudulKeluhan(e.target.value)} />
+                                <div className="flex gap-2">
+                                    <input type="text" placeholder="Detail..." className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={isiKeluhan} onChange={e => setIsiKeluhan(e.target.value)}/>
+                                    <button type="submit" className="bg-amber-500 text-white px-4 rounded-xl shadow-lg hover:bg-amber-600 transition flex items-center justify-center">
+                                        <Send size={18}/>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
         ) : (
@@ -192,6 +243,7 @@ const UserDashboard = () => {
         )}
       </div>
 
+      {/* MODAL KONFIRMASI */}
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsConfirmOpen(false)}></div>
@@ -204,6 +256,7 @@ const UserDashboard = () => {
         </div>
       )}
 
+      {/* MODAL NOTIFIKASI */}
       {modal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setModal({...modal, isOpen: false})}></div>
