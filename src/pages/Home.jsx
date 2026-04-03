@@ -120,9 +120,20 @@ const Home = () => {
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 fixed w-full z-40 top-0 left-0">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <a href="#" className="flex items-center gap-2" onClick={() => window.scrollTo(0,0)}>
-                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white"><Star fill="currentColor" className="w-6 h-6" /></div>
-                <div><h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1><p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p></div>
+            <a href="#" className="flex items-center gap-3" onClick={() => window.scrollTo(0,0)}>
+                {/* --- BAGIAN YANG DIGANTI: LOGO ICON --- */}
+                {/* Menghapus div bg-blue-600 lama, diganti div pembungkus gambar */}
+                <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+                    {/* Pastikan file 'logo-baru.png' ada di folder 'public' */}
+                    <img src="/logo-baru.png" alt="Logo Dykaya Baru" className="w-full h-full object-contain" />
+                </div>
+                {/* --- AKHIR BAGIAN YANG DIGANTI --- */}
+
+                {/* TEXT TETAP SAMA, TIDAK DIGANTI */}
+                <div>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1>
+                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
+                </div>
             </a>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
@@ -197,11 +208,11 @@ const Home = () => {
                     <h2 className="text-2xl font-bold mb-6">KOST <span className="text-blue-500">DYKAYA</span></h2>
                     <p className="text-slate-400 mb-8 leading-relaxed max-w-md">Tempat Tinggal Nyaman Buat Kamu di Malang</p>
                     <div className="space-y-4">
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 hover:text-blue-400 transition-colors">
                             <MapPin className="text-blue-400 flex-shrink-0" /> 
                             <span>Jl. Taman Bunga Merak II No.62, Lowokwaru, Malang</span>
                         </div>
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 hover:text-blue-400 transition-colors">
                             <Phone className="text-blue-400 flex-shrink-0" /> 
                             <span>0812-3456-7890 (Ibu Kost)</span>
                         </div>
@@ -211,7 +222,7 @@ const Home = () => {
                     <iframe title="Lokasi" src="https://maps.google.com/maps?q=Malang&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
                 </div>
             </div>
-            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang.</div>
+            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang. All Rights Reserved.</div>
         </div>
       </footer>
 
