@@ -358,6 +358,4 @@ app.delete('/api/rooms/:id', (req, res) => {
 
 
 
-app.listen(PORT, () => {
-    console.log(`Server jalan di http://localhost:${PORT}`);
-});
+module.exports = app;
