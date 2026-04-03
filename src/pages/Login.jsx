@@ -49,7 +49,7 @@ const Login = () => {
             {/* GANTI KE LOGO BARU KAMU */}
             <div className="w-16 h-16 flex items-center justify-center">
                 <img 
-                  src="/logo-baru.png.png" 
+                  src="/logo-baru.png" 
                   alt="Logo Dykaya" 
                   className="w-full h-full object-contain" 
                 />
