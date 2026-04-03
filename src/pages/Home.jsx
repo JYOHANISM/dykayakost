@@ -157,7 +157,7 @@ const Home = () => {
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600 rounded-full blur-[150px] opacity-30 -translate-y-1/2 translate-x-1/3"></div>
           <div className="relative z-10 max-w-2xl">
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wide mb-6">PROMO: MAAF LAGI GAADA</span>
-            <h2 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">Tempat Tinggal Nyaman<br/> <span className="text-blue-400">Buat Kamu di Malang</span></h2>
+            <h2 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">Hunian Nyaman<br/> <span className="text-blue-400">Buat Kamu di Malang</span></h2>
             <div className="flex flex-col md:flex-row md:items-center gap-2 text-blue-200 mb-8 font-medium bg-slate-800/50 w-fit px-4 py-2 rounded-lg border border-slate-700"><MapPin size={20} /> <span>Jl. Taman Bunga Merak II No. 62, Lowokwaru</span></div>
             <a href="#katalog" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl md:rounded-full font-bold transition inline-block">Cari Kamar</a>
           </div>
