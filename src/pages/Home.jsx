@@ -11,7 +11,7 @@ const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
-  // STATE POP-UP GANTENG
+  // STATE POP-UP
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
@@ -24,7 +24,7 @@ const Home = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // --- FETCH DATA ---
+  // --- FETCH DATA (URL RELATIF UNTUK VERCEL) ---
   useEffect(() => {
     const savedName = localStorage.getItem('userName');
     const savedRole = localStorage.getItem('userRole');
@@ -33,7 +33,8 @@ const Home = () => {
         setUserRole(savedRole);
     }
 
-    fetch('http://localhost:3000/api/rooms')
+    // Ganti localhost jadi /api
+    fetch('/api/rooms')
       .then((response) => response.json())
       .then((data) => {
         setRawRooms(data); 
@@ -57,16 +58,14 @@ const Home = () => {
   const openBooking = (typeData) => {
     const isLoggedIn = localStorage.getItem('userId');
     
-    // SATPAM LOGIN
     if (!isLoggedIn) {
         setShowLoginModal(true); 
         return; 
     }
 
-    // Kalau aman, buka form
     setSelectedType(typeData);
     setBookingTargetId(typeData.nextAvailableId);
-    setFormError(''); // Reset error
+    setFormError(''); 
     
     const savedName = localStorage.getItem('userName');
     setFormData({ nama: savedName || '', no_hp: '' });
@@ -74,7 +73,6 @@ const Home = () => {
   };
 
   const handleSubmitBooking = async () => {
-    // VALIDASI TANPA ALERT
     if(!formData.nama || !formData.no_hp) {
         setFormError("Nama dan Nomor WhatsApp wajib diisi!");
         return;
@@ -83,7 +81,8 @@ const Home = () => {
     const loggedInUserId = localStorage.getItem('userId');
 
     try {
-        const response = await fetch('http://localhost:3000/api/book', {
+        // Ganti localhost jadi /api
+        const response = await fetch('/api/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -97,7 +96,6 @@ const Home = () => {
         const result = await response.json();
         
         if(result.status === "Success") {
-            // SUKSES -> POP-UP HIJAU
             setIsModalOpen(false);
             setShowSuccessModal(true); 
             setFormData({ nama: '', no_hp: '' });
@@ -128,7 +126,10 @@ const Home = () => {
             </a>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
-            <a href="#" className="hover:text-blue-600">Beranda</a><a href="#fasilitas" className="hover:text-blue-600">Fasilitas</a><a href="#katalog" className="hover:text-blue-600">Katalog</a><a href="#lokasi" className="hover:text-blue-600">Lokasi</a>
+            <a href="#" className="hover:text-blue-600">Beranda</a>
+            <a href="#fasilitas" className="hover:text-blue-600">Fasilitas</a>
+            <a href="#katalog" className="hover:text-blue-600">Katalog</a>
+            <a href="#lokasi" className="hover:text-blue-600">Lokasi</a>
             {currentUser ? (
                 <a href={dashboardLink} className="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition"><User size={18} /> Halo, {currentUser}</a>
             ) : (
@@ -188,15 +189,13 @@ const Home = () => {
         )}
       </section>
 
-      {/* FOOTER (LENGKAP) */}
+      {/* FOOTER */}
       <footer id="lokasi" className="bg-slate-900 text-white py-16 scroll-mt-24">
         <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
                     <h2 className="text-2xl font-bold mb-6">KOST <span className="text-blue-500">DYKAYA</span></h2>
                     <p className="text-slate-400 mb-8 leading-relaxed max-w-md">Hunian nyaman, aman, dan strategis.</p>
-                    
-                    {/* INFO LOKASI & KONTAK */}
                     <div className="space-y-4">
                         <div className="flex items-start gap-4">
                             <MapPin className="text-blue-400 flex-shrink-0" /> 
@@ -208,58 +207,69 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-
                 <div className="h-64 bg-slate-800 rounded-3xl overflow-hidden border-4 border-slate-700">
-                    <iframe title="Lokasi" src="https://maps.google.com/maps?q=Jl.+Taman+Bunga+Merak+II+No.62,+Lowokwaru,+Malang&t=&z=15&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
+                    <iframe title="Lokasi" src="https://maps.google.com/maps?q=Malang&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
                 </div>
             </div>
-            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2024 Kost Dykaya Malang.</div>
+            <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang.</div>
         </div>
       </footer>
 
-      {/* --- POP-UP 1: PERINGATAN LOGIN --- */}
+      {/* POP-UPS */}
       {showLoginModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowLoginModal(false)}></div>
-            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 overflow-hidden text-center p-8 animate-fade-in transform scale-100 transition-all">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowLoginModal(false)}></div>
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 p-8 text-center animate-fade-in">
                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6"><Lock size={32} /></div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Akses Terbatas</h3>
-                <p className="text-slate-500 mb-8 text-sm leading-relaxed">Eits, kamu harus <strong>Login</strong> atau <strong>Daftar</strong> dulu sebelum bisa memesan kamar impianmu.</p>
+                <p className="text-slate-500 mb-8 text-sm">Silakan Login terlebih dahulu untuk memesan kamar.</p>
                 <div className="flex flex-col gap-3">
-                    <button onClick={() => navigate('/login')} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-900/20">Login Sekarang</button>
-                    <button onClick={() => setShowLoginModal(false)} className="w-full bg-transparent text-slate-500 font-bold py-3.5 rounded-xl hover:bg-slate-50 transition">Nanti Dulu</button>
+                    <button onClick={() => navigate('/login')} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition">Login Sekarang</button>
+                    <button onClick={() => setShowLoginModal(false)} className="w-full text-slate-500 font-bold py-3.5 rounded-xl">Nanti Dulu</button>
                 </div>
             </div>
         </div>
       )}
 
-      {/* --- POP-UP 2: BOOKING BERHASIL --- */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 overflow-hidden text-center p-8 animate-fade-in transform scale-100 transition-all">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 p-8 text-center animate-fade-in">
                 <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={32} /></div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Booking Berhasil!</h3>
-                <p className="text-slate-500 mb-8 text-sm leading-relaxed">Terima kasih! Admin akan segera menghubungi via WhatsApp untuk konfirmasi.</p>
-                <button onClick={handleCloseSuccess} className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-900/20">OK, Siap!</button>
+                <p className="text-slate-500 mb-8 text-sm">Admin akan segera menghubungi via WhatsApp untuk konfirmasi.</p>
+                <button onClick={handleCloseSuccess} className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition">OK, Siap!</button>
             </div>
         </div>
       )}
 
-      {/* --- POP-UP 3: FORM BOOKING UTAMA --- */}
       {isModalOpen && selectedType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)}></div>
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
             <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-fade-in">
-                <div className="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center"><div><h3 className="text-lg font-bold text-slate-900">Booking {selectedType.tipe_kamar}</h3><p className="text-sm text-green-600 font-medium">✨ Tersedia! Sistem memilihkan unit terbaik untukmu.</p></div><button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition"><XCircle className="text-slate-400 w-6 h-6" /></button></div>
+                <div className="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900">Booking {selectedType.tipe_kamar}</h3>
+                        <p className="text-sm text-green-600 font-medium">Sistem memilihkan unit terbaik untukmu.</p>
+                    </div>
+                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition"><XCircle className="text-slate-400 w-6 h-6" /></button>
+                </div>
                 <div className="p-8 space-y-4">
-                    {/* AREA ERROR MERAH */}
                     {formError && (
-                        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl flex items-center gap-2 text-sm font-bold animate-pulse">
+                        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl flex items-center gap-2 text-sm font-bold">
                             <AlertCircle size={16} /> {formError}
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nama Lengkap</label><input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-2">No. WhatsApp</label><input type="tel" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" placeholder="08xx-xxxx" value={formData.no_hp} onChange={(e) => setFormData({...formData, no_hp: e.target.value})} /></div></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nama Lengkap</label>
+                            <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">No. WhatsApp</label>
+                            <input type="tel" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" placeholder="08xx-xxxx" value={formData.no_hp} onChange={(e) => setFormData({...formData, no_hp: e.target.value})} />
+                        </div>
+                    </div>
                     <button type="button" onClick={handleSubmitBooking} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition">Booking Sekarang</button>
                 </div>
             </div>

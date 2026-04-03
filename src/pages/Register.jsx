@@ -7,7 +7,7 @@ const Register = () => {
   const [formData, setFormData] = useState({ nama: '', email: '', no_hp: '', password: '' });
   const [loading, setLoading] = useState(false);
 
-  // --- STATE MODAL GANTENG ---
+  // --- STATE MODAL ---
   const [modal, setModal] = useState({ 
     isOpen: false, 
     type: 'success', // success, error
@@ -20,7 +20,8 @@ const Register = () => {
     setLoading(true);
 
     try {
-        const response = await fetch('http://localhost:3000/api/register', {
+        // --- PATH RELATIF UNTUK DEPLOYMENT VERCEL ---
+        const response = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -28,7 +29,6 @@ const Register = () => {
         const result = await response.json();
 
         if(result.status === "Success") {
-            // SUKSES -> POP UP HIJAU
             setModal({
                 isOpen: true,
                 type: 'success',
@@ -36,7 +36,6 @@ const Register = () => {
                 message: 'Akun Anda sudah siap. Silakan login untuk melanjutkan.'
             });
         } else {
-            // GAGAL -> POP UP MERAH
             setModal({
                 isOpen: true,
                 type: 'error',
@@ -49,17 +48,15 @@ const Register = () => {
             isOpen: true,
             type: 'error',
             title: 'Error Koneksi',
-            message: 'Tidak bisa terhubung ke server.'
+            message: 'Gagal terhubung ke server. Pastikan database TiDB Anda aktif.'
         });
     } finally {
         setLoading(false);
     }
   };
 
-  // Fungsi saat tombol di Modal diklik
   const handleModalClose = () => {
     setModal({ ...modal, isOpen: false });
-    // Kalau sukses, langsung lempar ke halaman Login
     if (modal.type === 'success') {
         navigate('/login');
     }
@@ -69,12 +66,10 @@ const Register = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 relative z-10">
         
-        {/* TOMBOL KEMBALI */}
         <button onClick={() => navigate('/')} className="mb-6 flex items-center text-slate-400 hover:text-blue-600 gap-2 text-sm font-bold transition">
             <ArrowLeft size={16} /> Kembali
         </button>
 
-        {/* HEADER */}
         <div className="flex justify-center mb-6">
             <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
                 <UserPlus className="w-6 h-6" />
@@ -83,7 +78,6 @@ const Register = () => {
         <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Buat Akun Baru</h2>
         <p className="text-slate-500 text-center mb-8">Gabung jadi anak Kost Dykaya</p>
         
-        {/* FORM REGISTER */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nama Lengkap</label>
@@ -102,8 +96,8 @@ const Register = () => {
             <input type="password" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="••••••••" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} required />
           </div>
           
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-lg mt-4 shadow-blue-900/20">
-            {loading ? 'Mendaftarkan...' : 'DAFTAR SEKARANG'}
+          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-lg mt-4 shadow-blue-900/20 disabled:bg-slate-400">
+            {loading ? 'MENDAFTARKAN...' : 'DAFTAR SEKARANG'}
           </button>
         </form>
 
@@ -112,18 +106,12 @@ const Register = () => {
         </p>
       </div>
 
-      {/* =========================== */}
-      {/* POP-UP GANTENG (MODAL) ✨ */}
-      {/* =========================== */}
+      {/* POP-UP MODAL */}
       {modal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop Blur */}
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={handleModalClose}></div>
-            
-            {/* Modal Body */}
             <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-50 overflow-hidden text-center p-8 animate-fade-in transform scale-100 transition-all">
                 
-                {/* Ikon Dinamis */}
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
                     modal.type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                 }`}>

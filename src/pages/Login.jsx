@@ -12,7 +12,8 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-        const response = await fetch('http://localhost:3000/api/login', {
+        // --- SEKARANG MENGGUNAKAN PATH RELATIF UNTUK VERCEL ---
+        const response = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -24,19 +25,24 @@ const Login = () => {
             localStorage.setItem('userName', result.name);
             localStorage.setItem('userRole', result.role);
 
+            // Redireksi sesuai Role
             if(result.role === 'admin') navigate('/admin');
             else navigate('/user');
         } else {
             alert("Login Gagal! Email/Password salah.");
         }
-    } catch (error) { alert("Error koneksi server!"); } finally { setLoading(false); }
+    } catch (error) { 
+        alert("Error koneksi server! Pastikan database TiDB Anda aktif."); 
+    } finally { 
+        setLoading(false); 
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100">
         
-        {/* TOMBOL KEMBALI KE BERANDA (BARU) */}
+        {/* TOMBOL KEMBALI KE BERANDA */}
         <button onClick={() => navigate('/')} className="mb-6 flex items-center text-slate-400 hover:text-blue-600 gap-2 text-sm font-bold transition">
             <ArrowLeft size={16} /> Kembali ke Beranda
         </button>
@@ -53,14 +59,32 @@ const Login = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1">Email</label>
-            <input type="email" className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input 
+              type="email" 
+              placeholder="nama@email.com"
+              className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+            />
           </div>
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
-            <input type="password" className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input 
+              type="password" 
+              placeholder="••••••••"
+              className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition shadow-lg shadow-slate-900/20">
-            {loading ? 'Loading...' : 'LOGIN'}
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 disabled:bg-slate-400"
+          >
+            {loading ? 'MENGECEK AKUN...' : 'LOGIN'}
           </button>
         </form>
         
@@ -71,4 +95,5 @@ const Login = () => {
     </div>
   );
 };
+
 export default Login;

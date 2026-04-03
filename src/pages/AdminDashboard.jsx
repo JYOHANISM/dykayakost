@@ -11,18 +11,19 @@ const AdminDashboard = () => {
   const [rooms, setRooms] = useState([]);
   
   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', id: null, title: '', message: '', data: null });
-  const [editValue, setEditValue] = useState('');
   const [newExpense, setNewExpense] = useState({ nama: '', biaya: '', tanggal: '' });
   
   const [newRoom, setNewRoom] = useState({ nomor_kamar: '', tipe_kamar: '', harga_bulanan: '', fasilitas: '', status: 'tersedia', foto_kamar: '' });
   const [editTipe, setEditTipe] = useState({ tipe_kamar_lama: '', tipe_kamar_baru: '', harga_bulanan: '', fasilitas: '', foto_kamar: '' });
 
+  // --- SOURCE DATA (PATH RELATIF UNTUK VERCEL) ---
   const fetchData = () => {
-    fetch('http://localhost:3000/api/transactions').then(res=>res.json()).then(data=>setBookings(data));
-    fetch('http://localhost:3000/api/complaints').then(res=>res.json()).then(data=>setComplaints(data));
-    fetch('http://localhost:3000/api/expenses').then(res=>res.json()).then(data=>setExpenses(data));
-    fetch('http://localhost:3000/api/rooms').then(res=>res.json()).then(data=>setRooms(data));
+    fetch('/api/transactions').then(res=>res.json()).then(data=>setBookings(data)).catch(err => console.error("Error Fetch Transactions:", err));
+    fetch('/api/complaints').then(res=>res.json()).then(data=>setComplaints(data)).catch(err => console.error("Error Fetch Complaints:", err));
+    fetch('/api/expenses').then(res=>res.json()).then(data=>setExpenses(data)).catch(err => console.error("Error Fetch Expenses:", err));
+    fetch('/api/rooms').then(res=>res.json()).then(data=>setRooms(data)).catch(err => console.error("Error Fetch Rooms:", err));
   };
+
   useEffect(() => { fetchData(); }, []);
 
   const openStatusModal = (id, status) => {
@@ -37,12 +38,10 @@ const AdminDashboard = () => {
   const openDeleteModal = (id, nama) => { setModalConfig({ isOpen: true, type: 'delete', id: id, title: 'Hapus Data?', message: `Hapus data "${nama}"?`, data: null }); };
   const openExpenseModal = () => { setNewExpense({ nama: '', biaya: '', tanggal: '' }); setModalConfig({ isOpen: true, type: 'expense', id: null, title: 'Catat Pengeluaran', message: '', data: null }); };
 
-  // FUNGSI MODAL KAMAR
   const openAddRoomModal = () => { setNewRoom({ nomor_kamar: '', tipe_kamar: '', harga_bulanan: '', fasilitas: '', status: 'tersedia', foto_kamar: '' }); setModalConfig({ isOpen: true, type: 'add_room', id: null, title: 'Tambah Kamar Baru', message: 'Masukkan detail kamar:', data: { isNewType: true } }); };
   const openEditRoomModal = (room) => { setNewRoom(room); setModalConfig({ isOpen: true, type: 'edit_room', id: room.id, title: `Edit Kamar ${room.nomor_kamar}`, message: 'Ubah nomor atau status ketersediaan kamar:', data: null }); };
   const openDeleteRoomModal = (id, nomor) => { setModalConfig({ isOpen: true, type: 'delete_room', id: id, title: 'Hapus Kamar?', message: `Yakin ingin menghapus Kamar ${nomor}?`, data: null }); };
   
-  // MODAL BARU: EDIT TIPE KAMAR
   const openEditTipeModal = (tipeLama, harga, fasilitas, foto) => {
       setEditTipe({ tipe_kamar_lama: tipeLama, tipe_kamar_baru: tipeLama, harga_bulanan: harga, fasilitas: fasilitas, foto_kamar: foto || '' });
       setModalConfig({ isOpen: true, type: 'edit_tipe', id: null, title: `Edit ${tipeLama}`, message: 'Perubahan ini akan diterapkan ke SEMUA kamar yang bertipe ini.', data: null });
@@ -53,22 +52,34 @@ const AdminDashboard = () => {
     if(type === 'view_proof') { setModalConfig({...modalConfig, isOpen: false}); return; }
     
     try {
-        if (['approved', 'waiting_payment', 'rejected'].includes(type)) await fetch(`http://localhost:3000/api/transactions/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: type}) });
-        else if (type === 'delete') await fetch(`http://localhost:3000/api/transactions/${id}`, { method: 'DELETE' });
-        else if (type === 'expense') await fetch('http://localhost:3000/api/expenses', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newExpense) });
-        
-        else if (type === 'add_room') await fetch('http://localhost:3000/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
-        else if (type === 'edit_room') await fetch(`http://localhost:3000/api/rooms/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
-        else if (type === 'delete_room') await fetch(`http://localhost:3000/api/rooms/${id}`, { method: 'DELETE' });
-        
-        // Panggil API Bulk Update
-        else if (type === 'edit_tipe') await fetch('http://localhost:3000/api/rooms/update-tipe', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editTipe) });
+        if (['approved', 'waiting_payment', 'rejected'].includes(type)) {
+            await fetch(`/api/transactions/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: type}) });
+        } else if (type === 'delete') {
+            await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+        } else if (type === 'expense') {
+            await fetch('/api/expenses', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newExpense) });
+        } else if (type === 'add_room') {
+            await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
+        } else if (type === 'edit_room') {
+            await fetch(`/api/rooms/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
+        } else if (type === 'delete_room') {
+            await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
+        } else if (type === 'edit_tipe') {
+            await fetch('/api/rooms/update-tipe', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editTipe) });
+        }
 
-        setModalConfig({ ...modalConfig, isOpen: false }); fetchData();
-    } catch (error) { alert("Gagal memproses data."); }
+        setModalConfig({ ...modalConfig, isOpen: false }); 
+        fetchData();
+    } catch (error) { 
+        alert("Gagal memproses data. Cek koneksi server."); 
+    }
   };
 
-  const handleStatusComplaint = async (id, status) => { await fetch(`http://localhost:3000/api/complaints/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status}) }); fetchData(); };
+  const handleStatusComplaint = async (id, status) => { 
+    await fetch(`/api/complaints/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status}) }); 
+    fetchData(); 
+  };
+
   const handleLogout = () => { localStorage.clear(); navigate('/login'); };
   const profit = bookings.filter(b => b.status_verifikasi === 'approved').reduce((t, i) => t + parseInt(i.harga_bulanan), 0) - expenses.reduce((t, i) => t + parseInt(i.biaya), 0);
 
@@ -120,7 +131,7 @@ const AdminDashboard = () => {
              </div>
         )}
 
-        {/* TABEL KAMAR BARU (GROUPING) */}
+        {/* TABEL KAMAR */}
         {activeTab === 'kamar' && (
             <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden animate-fade-in">
                 <div className="flex justify-between items-center p-6 border-b border-slate-100">
@@ -167,7 +178,6 @@ const AdminDashboard = () => {
                                                 </div>
                                             </button>
                                         ))}
-                                        
                                         <button onClick={() => {
                                             setNewRoom({ nomor_kamar: '', tipe_kamar: tipe, harga_bulanan: data.harga, fasilitas: data.fasilitas, status: 'tersedia' });
                                             setModalConfig({ isOpen: true, type: 'add_room', id: null, title: `Tambah ${tipe}`, message: 'Masukkan nomor kamar baru:', data: null });
@@ -251,7 +261,7 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* COMPLAINTS & FINANCE */}
+        {/* KELUHAN & KEUANGAN */}
         {activeTab === 'keluhan' && (<div className="grid gap-4 animate-fade-in">{complaints.map(c => (<div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center hover:border-blue-200 transition"><div className="flex gap-4 items-start"><div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div><div><h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4><p className="text-sm text-slate-500 mt-1">{c.isi_keluhan}</p><div className="text-xs text-slate-400 mt-2 font-bold uppercase">{c.nama_lengkap} • Kamar {c.nomor_kamar}</div></div></div>{c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100 transition">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai</span>}</div>))}</div>)}
         {activeTab === 'keuangan' && (<div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 animate-fade-in"><div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div><table className="w-full text-sm text-slate-600"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody className="divide-y divide-slate-50">{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table></div>)}
       </main>
@@ -267,31 +277,18 @@ const AdminDashboard = () => {
                 {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto object-contain"/> : <div className="p-8 text-center text-slate-400 text-sm">Belum ada bukti yang diupload user ini.</div>}</div>)}
                 {modalConfig.type === 'expense' && <div className="space-y-3 mb-6"><input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Nama Pengeluaran" value={newExpense.nama} onChange={e=>setNewExpense({...newExpense, nama: e.target.value})}/><input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Biaya (Rp)" value={newExpense.biaya} onChange={e=>setNewExpense({...newExpense, biaya: e.target.value})}/><input type="date" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newExpense.tanggal} onChange={e=>setNewExpense({...newExpense, tanggal: e.target.value})}/></div>}
                 
-                {/* Form Input Tambah/Edit 1 Kamar */}
                 {(modalConfig.type === 'add_room' || modalConfig.type === 'edit_room') && (
                     <div className="space-y-3 mb-6">
-                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold focus:ring-2 focus:ring-blue-500 transition" placeholder="Nomor Kamar (Contoh: 101)" value={newRoom.nomor_kamar} onChange={e=>setNewRoom({...newRoom, nomor_kamar: e.target.value})}/>
-                        
-                        {modalConfig.type === 'add_room' && (
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold focus:ring-2 focus:ring-blue-500 transition" placeholder="Nomor Kamar" value={newRoom.nomor_kamar} onChange={e=>setNewRoom({...newRoom, nomor_kamar: e.target.value})}/>
+                        {modalConfig.type === 'add_room' && modalConfig.data?.isNewType && (
                             <>
-                                {modalConfig.data?.isNewType ? (
-                                    <>
-                                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition" placeholder="Tipe Kamar Baru (Contoh: VVIP Room)" value={newRoom.tipe_kamar} onChange={e=>setNewRoom({...newRoom, tipe_kamar: e.target.value})}/>
-                                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition" placeholder="Harga per Bulan (Rp)" value={newRoom.harga_bulanan} onChange={e=>setNewRoom({...newRoom, harga_bulanan: e.target.value})}/>
-                                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition" placeholder="Fasilitas (pisahkan koma)" value={newRoom.fasilitas} onChange={e=>setNewRoom({...newRoom, fasilitas: e.target.value})}/>
-                                        {/* TAMBAHAN INPUT FOTO */}
-                                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition" placeholder="Link URL Foto Kamar" value={newRoom.foto_kamar} onChange={e=>setNewRoom({...newRoom, foto_kamar: e.target.value})}/>
-                                    </>
-                                ) : (
-                                    <>
-                                        <input className="w-full bg-slate-100 text-slate-500 border-0 p-4 rounded-xl cursor-not-allowed" readOnly title="Otomatis mengikuti grup" value={newRoom.tipe_kamar} />
-                                        <input className="w-full bg-slate-100 text-slate-500 border-0 p-4 rounded-xl cursor-not-allowed" readOnly title="Otomatis mengikuti grup" value={`Rp ${parseInt(newRoom.harga_bulanan || 0).toLocaleString()}`} />
-                                    </>
-                                )}
+                                <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Tipe Kamar" value={newRoom.tipe_kamar} onChange={e=>setNewRoom({...newRoom, tipe_kamar: e.target.value})}/>
+                                <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Harga" value={newRoom.harga_bulanan} onChange={e=>setNewRoom({...newRoom, harga_bulanan: e.target.value})}/>
+                                <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Fasilitas" value={newRoom.fasilitas} onChange={e=>setNewRoom({...newRoom, fasilitas: e.target.value})}/>
+                                <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Link Foto" value={newRoom.foto_kamar} onChange={e=>setNewRoom({...newRoom, foto_kamar: e.target.value})}/>
                             </>
                         )}
-
-                        <select className="w-full bg-slate-50 border-0 p-4 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 transition" value={newRoom.status} onChange={e=>setNewRoom({...newRoom, status: e.target.value})}>
+                        <select className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newRoom.status} onChange={e=>setNewRoom({...newRoom, status: e.target.value})}>
                             <option value="tersedia">Tersedia</option>
                             <option value="terisi">Terisi</option>
                             <option value="perbaikan">Sedang Perbaikan</option>
@@ -299,25 +296,23 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {/* MODAL BARU: Form Input Edit Tipe Keseluruhan */}
                 {modalConfig.type === 'edit_tipe' && (
                     <div className="space-y-3 mb-6">
-                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold focus:ring-2 focus:ring-blue-500 transition" placeholder="Nama Tipe (Contoh: VIP Room)" value={editTipe.tipe_kamar_baru} onChange={e=>setEditTipe({...editTipe, tipe_kamar_baru: e.target.value})}/>
-                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition" placeholder="Harga per Bulan (Rp)" value={editTipe.harga_bulanan} onChange={e=>setEditTipe({...editTipe, harga_bulanan: e.target.value})}/>
-                        <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition resize-none h-24" placeholder="Fasilitas (pisahkan koma)" value={editTipe.fasilitas} onChange={e=>setEditTipe({...editTipe, fasilitas: e.target.value})}></textarea>
-                        {/* TAMBAHAN INPUT FOTO */}
-                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 transition" placeholder="Link URL Foto Kamar" value={editTipe.foto_kamar} onChange={e=>setEditTipe({...editTipe, foto_kamar: e.target.value})}/>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" value={editTipe.tipe_kamar_baru} onChange={e=>setEditTipe({...editTipe, tipe_kamar_baru: e.target.value})}/>
+                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.harga_bulanan} onChange={e=>setEditTipe({...editTipe, harga_bulanan: e.target.value})}/>
+                        <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl h-24" value={editTipe.fasilitas} onChange={e=>setEditTipe({...editTipe, fasilitas: e.target.value})}></textarea>
+                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.foto_kamar} onChange={e=>setEditTipe({...editTipe, foto_kamar: e.target.value})}/>
                     </div>
                 )}
 
                 <div className="flex gap-3">
                     {modalConfig.type === 'edit_room' && (
-                        <button onClick={() => openDeleteRoomModal(modalConfig.id, newRoom.nomor_kamar)} className="py-4 px-6 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 hover:text-rose-700 transition flex items-center justify-center">
+                        <button onClick={() => openDeleteRoomModal(modalConfig.id, newRoom.nomor_kamar)} className="py-4 px-6 bg-rose-50 text-rose-600 rounded-xl font-bold">
                             <Trash2 size={20} />
                         </button>
                     )}
-                    <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition">{modalConfig.type === 'view_proof' ? 'Tutup' : 'Batal'}</button>
-                    {modalConfig.type !== 'view_proof' && <button onClick={confirmAction} className={`flex-1 py-4 text-white rounded-xl font-bold shadow-lg transition ${modalConfig.type === 'delete_room' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/30' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'}`}>Konfirmasi</button>}
+                    <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
+                    {modalConfig.type !== 'view_proof' && <button onClick={confirmAction} className={`flex-1 py-4 text-white rounded-xl font-bold shadow-lg ${modalConfig.type === 'delete_room' ? 'bg-rose-600' : 'bg-blue-600'}`}>Konfirmasi</button>}
                 </div>
             </div>
         </div>
