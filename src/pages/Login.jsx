@@ -38,50 +38,45 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl w-full max-w-md border border-slate-100 relative overflow-hidden">
+      <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100">
         
-        {/* Dekorasi halus biar gak kaku */}
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
-
         {/* TOMBOL KEMBALI KE BERANDA */}
-        <button onClick={() => navigate('/')} className="mb-8 flex items-center text-slate-400 hover:text-blue-600 gap-2 text-xs font-black uppercase tracking-widest transition group">
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali
+        <button onClick={() => navigate('/')} className="mb-6 flex items-center text-slate-400 hover:text-blue-600 gap-2 text-sm font-bold transition">
+            <ArrowLeft size={16} /> Kembali ke Beranda
         </button>
 
         <div className="flex justify-center mb-6">
-            {/* FIX: MENGGANTI ICON BINTANG DENGAN LOGO BARU KAMU */}
+            {/* GANTI KE LOGO BARU KAMU */}
             <div className="w-16 h-16 flex items-center justify-center">
                 <img 
-                  src="/logo-baru.png" 
+                  src="/logo-baru.png.png" 
                   alt="Logo Dykaya" 
                   className="w-full h-full object-contain" 
                 />
             </div>
         </div>
         
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter uppercase">Selamat Datang!</h2>
-          <p className="text-slate-400 text-sm font-medium mt-1">Login untuk akses Kost Dykaya</p>
-        </div>
+        <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Selamat Datang!</h2>
+        <p className="text-slate-500 text-center mb-8">Login untuk akses Kost Dykaya</p>
         
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Email Address</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Email</label>
             <input 
               type="email" 
               placeholder="nama@email.com"
-              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-600 outline-none transition font-bold text-sm" 
+              className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required 
             />
           </div>
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Security Password</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
             <input 
               type="password" 
               placeholder="••••••••"
-              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-600 outline-none transition font-bold text-sm" 
+              className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required 
@@ -90,17 +85,15 @@ const Login = () => {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-blue-600 transition shadow-xl shadow-slate-900/20 disabled:bg-slate-400 uppercase tracking-widest text-xs"
+            className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 disabled:bg-slate-400"
           >
-            {loading ? 'MENGECEK AKUN...' : 'LOGIN SEKARANG'}
+            {loading ? 'MENGECEK AKUN...' : 'LOGIN'}
           </button>
         </form>
         
-        <div className="text-center mt-8 pt-6 border-t border-slate-50">
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                Belum punya akun? <span className="text-blue-600 cursor-pointer hover:text-slate-900 transition" onClick={() => navigate('/register')}>Daftar Akun Baru</span>
-            </p>
-        </div>
+        <p className="text-center mt-6 text-sm text-slate-500">
+            Belum punya akun? <span className="text-blue-600 font-bold cursor-pointer hover:underline" onClick={() => navigate('/register')}>Daftar Akun Baru</span>
+        </p>
       </div>
     </div>
   );
