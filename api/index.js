@@ -12,17 +12,28 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-const db = mysql.createConnection({
-    // Sekarang ambil dari Environment Variables Vercel
+// Ganti mysql.createConnection jadi mysql.createPool
+const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    port: process.env.DB_PORT || 4000,
-    
-    // --- INI YANG WAJIB ADA UNTUK TIDB CLOUD ---
+    port: 4000,
     ssl: {
-        rejectUnauthorized: false 
+        rejectUnauthorized: false
+    },
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+// Tes koneksi sekali saja saat server jalan
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error("❌ Gagal connect ke Database:", err);
+    } else {
+        console.log("✅ Berhasil connect ke Database lewat Pool!");
+        connection.release(); // Kembalikan ke pool
     }
 });
 
