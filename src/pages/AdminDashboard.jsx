@@ -93,10 +93,28 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleStatusComplaint = async (id, status) => { 
-    await fetch(`/api/complaints/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status}) }); 
-    fetchData(); 
-  };
+  // DI ADMIN DASHBOARD (FRONTEND)
+const handleStatusComplaint = async (id, status) => { 
+    try {
+        const res = await fetch(`/api/complaints/${id}`, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ status: status }) // Status di sini isinya 'selesai'
+        });
+        
+        const result = await res.json();
+        
+        if (result.status === "Success") {
+            // Refresh data setelah berhasil
+            fetchData(); 
+        } else {
+            alert("Gagal merubah status: " + result.message);
+        }
+    } catch (error) {
+        console.error("Error update keluhan:", error);
+        alert("Koneksi server bermasalah.");
+    }
+};
 
   const handleLogout = () => { localStorage.clear(); navigate('/login'); };
   const profit = bookings.filter(b => b.status_verifikasi === 'approved').reduce((t, i) => t + parseInt(i.harga_bulanan), 0) - expenses.reduce((t, i) => t + parseInt(i.biaya), 0);

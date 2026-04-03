@@ -53,9 +53,7 @@ app.post('/api/rooms', (req, res) => {
     });
 });
 
-// --- BAGIAN MANAGEMENT KAMAR ---
-
-// 1. UPDATE TIPE (MASSAL) - TARUH DI ATAS!
+// 3. UPDATE TIPE (MASSAL) - WAJIB DI ATAS RUTE :id
 app.put('/api/rooms/update-tipe', (req, res) => {
     const { tipe_kamar_lama, tipe_kamar_baru, harga_bulanan, fasilitas, foto_kamar } = req.body;
     const sql = "UPDATE rooms SET tipe_kamar=?, harga_bulanan=?, fasilitas=?, foto_kamar=? WHERE tipe_kamar=?";
@@ -65,45 +63,25 @@ app.put('/api/rooms/update-tipe', (req, res) => {
     });
 });
 
-// 2. UPDATE SATU KAMAR (BERDASARKAN ID) - TARUH DI BAWAHNYA!
+// 4. UPDATE SATU KAMAR (BERDASARKAN ID)
 app.put('/api/rooms/:id', (req, res) => {
     const { id } = req.params;
-    const { nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status } = req.body;
-    const sql = "UPDATE rooms SET nomor_kamar=?, tipe_kamar=?, harga_bulanan=?, fasilitas=?, status=? WHERE id=?";
-    db.query(sql, [nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status, id], (err, result) => {
+    const { nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status, foto_kamar } = req.body;
+    const sql = "UPDATE rooms SET nomor_kamar=?, tipe_kamar=?, harga_bulanan=?, fasilitas=?, status=?, foto_kamar=? WHERE id=?";
+    db.query(sql, [nomor_kamar, tipe_kamar, harga_bulanan, fasilitas, status, foto_kamar, id], (err, result) => {
         if (err) return res.status(500).json(err);
         return res.json({ status: "Success" });
     });
 });
 
-// HAPUS TRANSAKSI (DI API/INDEX.JS)
-app.delete('/api/transactions/:id', (req, res) => {
-    const { id } = req.params;
-
-    // 1. Cari dulu room_id-nya sebelum dihapus biar bisa kita balikin status kamarnya
-    const sqlGetRoom = "SELECT room_id FROM transactions WHERE id = ?";
-    
-    db.query(sqlGetRoom, [id], (err, data) => {
+// 5. HAPUS KAMAR
+app.delete('/api/rooms/:id', (req, res) => {
+    db.query("DELETE FROM rooms WHERE id=?", [req.params.id], (err) => {
         if (err) return res.status(500).json(err);
-        
-        if (data.length > 0) {
-            const roomId = data[0].room_id;
-
-            // 2. Hapus transaksinya
-            db.query("DELETE FROM transactions WHERE id = ?", [id], (errDelete) => {
-                if (errDelete) return res.status(500).json(errDelete);
-
-                // 3. Update status kamar jadi tersedia lagi
-                db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [roomId], (errUpdate) => {
-                    return res.json({ status: "Success", message: "Data berhasil dihapus dan kamar dikosongkan" });
-                });
-            });
-        } else {
-            // Kalau data transaksi gak ketemu, mungkin sudah terhapus
-            return res.status(404).json({ message: "Data tidak ditemukan" });
-        }
+        return res.json({ status: "Success" });
     });
 });
+
 // 6. LOGIN
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
@@ -124,29 +102,27 @@ app.post('/api/login', (req, res) => {
 // 7. REGISTER
 app.post('/api/register', (req, res) => {
     const { nama, email, password, no_hp } = req.body;
-    if (!email || !password) return res.json({ status: "Fail", message: "Email dan Password wajib diisi!" });
+    if (!email || !password) return res.json({ status: "Fail", message: "Email/Password wajib diisi!" });
 
     db.query("SELECT id FROM users WHERE email = ?", [email], (err, data) => {
-        if (err) return res.status(500).json({ status: "Error", message: "Gagal cek database" });
-        if (data && data.length > 0) return res.json({ status: "Fail", message: "Email sudah terdaftar!" });
+        if (err) return res.status(500).json(err);
+        if (data.length > 0) return res.json({ status: "Fail", message: "Email sudah terdaftar!" });
 
-        const sqlInsert = "INSERT INTO users (nama_lengkap, email, password, no_hp, role) VALUES (?, ?, ?, ?, 'penyewa')";
-        db.query(sqlInsert, [nama, email, password, no_hp], (err, result) => {
-            if (err) return res.status(500).json({ status: "Error", message: "Gagal daftar" });
-            return res.json({ status: "Success", message: "Registrasi Berhasil!" });
+        const sql = "INSERT INTO users (nama_lengkap, email, password, no_hp, role) VALUES (?, ?, ?, ?, 'penyewa')";
+        db.query(sql, [nama, email, password, no_hp], (err) => {
+            if (err) return res.status(500).json(err);
+            return res.json({ status: "Success" });
         });
     });
 });
 
-// 8. GET ALL TRANSACTIONS (ADMIN)
+// 8. TRANSAKSI (ADMIN)
 app.get('/api/transactions', (req, res) => {
     const sql = `
         SELECT t.*, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
         DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY) as jatuh_tempo,
         DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY), NOW()) as sisa_hari
-        FROM transactions t 
-        JOIN rooms r ON t.room_id = r.id 
-        ORDER BY t.tanggal_transaksi DESC`;
+        FROM transactions t JOIN rooms r ON t.room_id = r.id ORDER BY t.tanggal_transaksi DESC`;
     db.query(sql, (err, data) => {
         if (err) return res.status(500).json(err);
         return res.json(data);
@@ -158,13 +134,13 @@ app.post('/api/book', (req, res) => {
     const { nama, no_hp, room_id, tipe_kamar, user_id } = req.body;
     const keterangan = `Booking ${tipe_kamar} a.n ${nama} (${no_hp})`;
     const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'pending', ?)";
-    db.query(sql, [user_id, room_id, keterangan], (err, result) => {
+    db.query(sql, [user_id, room_id, keterangan], (err) => {
         if (err) return res.status(500).json(err);
         return res.json({ status: "Success" });
     });
 });
 
-// 10. UPDATE TRANSACTION
+// 10. UPDATE TRANSACTION (ACC/BAYAR)
 app.put('/api/transactions/:id', (req, res) => {
     const { id } = req.params;
     const { status, bukti_img } = req.body;
@@ -176,18 +152,15 @@ app.put('/api/transactions/:id', (req, res) => {
         params = [status, bukti_img, id];
     } else if (status === 'approved') {
         sql = "UPDATE transactions SET status_verifikasi = ?, tanggal_approve = NOW() WHERE id = ?";
-        params = [status, id];
     }
 
-    db.query(sql, params, (err, result) => {
+    db.query(sql, params, (err) => {
         if (err) return res.status(500).json(err);
         if (status === 'approved' || status === 'rejected') {
-            const getRoomSql = "SELECT room_id FROM transactions WHERE id = ?";
-            db.query(getRoomSql, [id], (err, data) => {
+            db.query("SELECT room_id FROM transactions WHERE id = ?", [id], (err, data) => {
                 if (data.length > 0) {
-                    const roomId = data[0].room_id;
                     const nextStatus = status === 'approved' ? 'terisi' : 'tersedia';
-                    db.query("UPDATE rooms SET status = ? WHERE id = ?", [nextStatus, roomId]);
+                    db.query("UPDATE rooms SET status = ? WHERE id = ?", [nextStatus, data[0].room_id]);
                 }
             });
         }
@@ -195,27 +168,40 @@ app.put('/api/transactions/:id', (req, res) => {
     });
 });
 
-// 11. GET MY BILL (USER DASHBOARD)
+// 11. HAPUS TRANSAKSI
+app.delete('/api/transactions/:id', (req, res) => {
+    db.query("SELECT room_id FROM transactions WHERE id = ?", [req.params.id], (err, data) => {
+        if (data && data.length > 0) {
+            const rid = data[0].room_id;
+            db.query("DELETE FROM transactions WHERE id = ?", [req.params.id], (err) => {
+                if (err) return res.status(500).json(err);
+                db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [rid]);
+                return res.json({ status: "Success" });
+            });
+        } else {
+            return res.status(404).json("Data Not Found");
+        }
+    });
+});
+
+// 12. GET MY BILL
 app.get('/api/my-bill/:userId', (req, res) => {
     const sql = `
         SELECT t.id as trans_id, t.status_verifikasi, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
         DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY) as jatuh_tempo,
         DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY), NOW()) as sisa_hari
-        FROM transactions t 
-        JOIN rooms r ON t.room_id = r.id
-        WHERE t.user_id = ? AND t.status_verifikasi != 'rejected' 
-        ORDER BY t.tanggal_transaksi DESC LIMIT 1`;
+        FROM transactions t JOIN rooms r ON t.room_id = r.id
+        WHERE t.user_id = ? AND t.status_verifikasi != 'rejected' ORDER BY t.tanggal_transaksi DESC LIMIT 1`;
     db.query(sql, [req.params.userId], (err, data) => {
         if (err) return res.status(500).json(err);
-        if (data.length === 0) return res.json({ status: "NoData" });
-        return res.json({ status: "Found", data: data[0] });
+        return res.json(data.length > 0 ? { status: "Found", data: data[0] } : { status: "NoData" });
     });
 });
 
-// 12. COMPLAINTS & EXPENSES
+// 13. KELUHAN (USER & ADMIN)
 app.post('/api/complaints', (req, res) => {
     const { user_id, judul, isi } = req.body;
-    db.query("INSERT INTO complaints (user_id, judul_keluhan, isi_keluhan) VALUES (?, ?, ?)", [user_id, judul, isi], (err, result) => {
+    db.query("INSERT INTO complaints (user_id, judul_keluhan, isi_keluhan) VALUES (?, ?, ?)", [user_id, judul, isi], (err) => {
         if(err) return res.status(500).json(err);
         return res.json({ status: "Success" });
     });
@@ -229,6 +215,16 @@ app.get('/api/complaints', (req, res) => {
     });
 });
 
+// INI YANG TADI HILANG BRO: UPDATE STATUS KELUHAN
+app.put('/api/complaints/:id', (req, res) => {
+    const { status } = req.body;
+    db.query("UPDATE complaints SET status = ? WHERE id = ?", [status, req.params.id], (err) => {
+        if(err) return res.status(500).json(err);
+        return res.json({ status: "Success" });
+    });
+});
+
+// 14. EXPENSES
 app.get('/api/expenses', (req, res) => {
     db.query("SELECT * FROM expenses ORDER BY tanggal_pengeluaran DESC", (err, data) => {
         if(err) return res.status(500).json(err);
@@ -238,7 +234,7 @@ app.get('/api/expenses', (req, res) => {
 
 app.post('/api/expenses', (req, res) => {
     const { nama, biaya, tanggal } = req.body;
-    db.query("INSERT INTO expenses (nama_pengeluaran, biaya, tanggal_pengeluaran) VALUES (?, ?, ?)", [nama, biaya, tanggal], (err, result) => {
+    db.query("INSERT INTO expenses (nama_pengeluaran, biaya, tanggal_pengeluaran) VALUES (?, ?, ?)", [nama, biaya, tanggal], (err) => {
         if(err) return res.status(500).json(err);
         return res.json({ status: "Success" });
     });
