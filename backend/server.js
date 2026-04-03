@@ -283,6 +283,7 @@ app.post('/api/expenses', (req, res) => {
     });
 });
 
+<<<<<<< HEAD
 // ==========================================
 // API UNTUK MANAJEMEN KAMAR (CRUD ROOMS)
 // ==========================================
@@ -352,6 +353,8 @@ app.delete('/api/rooms/:id', (req, res) => {
 
 
 
+=======
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
 app.listen(PORT, () => {
     console.log(`Server jalan di http://localhost:${PORT}`);
 });

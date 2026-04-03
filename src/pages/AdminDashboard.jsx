@@ -8,20 +8,29 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [expenses, setExpenses] = useState([]);
+<<<<<<< HEAD
   const [rooms, setRooms] = useState([]);
+=======
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
   
   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', id: null, title: '', message: '', data: null });
   const [editValue, setEditValue] = useState('');
   const [newExpense, setNewExpense] = useState({ nama: '', biaya: '', tanggal: '' });
+<<<<<<< HEAD
   
   const [newRoom, setNewRoom] = useState({ nomor_kamar: '', tipe_kamar: '', harga_bulanan: '', fasilitas: '', status: 'tersedia', foto_kamar: '' });
   const [editTipe, setEditTipe] = useState({ tipe_kamar_lama: '', tipe_kamar_baru: '', harga_bulanan: '', fasilitas: '', foto_kamar: '' });
+=======
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
 
   const fetchData = () => {
     fetch('http://localhost:3000/api/transactions').then(res=>res.json()).then(data=>setBookings(data));
     fetch('http://localhost:3000/api/complaints').then(res=>res.json()).then(data=>setComplaints(data));
     fetch('http://localhost:3000/api/expenses').then(res=>res.json()).then(data=>setExpenses(data));
+<<<<<<< HEAD
     fetch('http://localhost:3000/api/rooms').then(res=>res.json()).then(data=>setRooms(data));
+=======
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
   };
   useEffect(() => { fetchData(); }, []);
 
@@ -33,6 +42,7 @@ const AdminDashboard = () => {
     setModalConfig({ isOpen: true, type: status, id: id, title, message: msg, data: null });
   };
 
+<<<<<<< HEAD
   const openProofModal = (imgData) => { setModalConfig({ isOpen: true, type: 'view_proof', id: null, title: 'Bukti Pembayaran', message: 'Cek keaslian bukti transfer ini.', data: imgData }); };
   const openDeleteModal = (id, nama) => { setModalConfig({ isOpen: true, type: 'delete', id: id, title: 'Hapus Data?', message: `Hapus data "${nama}"?`, data: null }); };
   const openExpenseModal = () => { setNewExpense({ nama: '', biaya: '', tanggal: '' }); setModalConfig({ isOpen: true, type: 'expense', id: null, title: 'Catat Pengeluaran', message: '', data: null }); };
@@ -66,6 +76,26 @@ const AdminDashboard = () => {
 
         setModalConfig({ ...modalConfig, isOpen: false }); fetchData();
     } catch (error) { alert("Gagal memproses data."); }
+=======
+  const openProofModal = (imgData) => {
+    setModalConfig({ isOpen: true, type: 'view_proof', id: null, title: 'Bukti Pembayaran', message: 'Cek keaslian bukti transfer ini.', data: imgData });
+  };
+
+  const openDeleteModal = (id, nama) => { setModalConfig({ isOpen: true, type: 'delete', id: id, title: 'Hapus Data?', message: `Hapus data "${nama}"?`, data: null }); };
+  const openEditModal = (id, currentText) => { setEditValue(currentText); setModalConfig({ isOpen: true, type: 'edit', id: id, title: 'Edit Info', message: 'Ubah keterangan:', data: null }); };
+  const openExpenseModal = () => { setNewExpense({ nama: '', biaya: '', tanggal: '' }); setModalConfig({ isOpen: true, type: 'expense', id: null, title: 'Catat Pengeluaran', message: '', data: null }); };
+
+  const confirmAction = async () => {
+    const { type, id } = modalConfig;
+    if(type === 'view_proof') { setModalConfig({...modalConfig, isOpen: false}); return; }
+    try {
+        if (['approved', 'waiting_payment', 'rejected'].includes(type)) await fetch(`http://localhost:3000/api/transactions/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: type}) });
+        else if (type === 'delete') await fetch(`http://localhost:3000/api/transactions/${id}`, { method: 'DELETE' });
+        else if (type === 'edit') await fetch(`http://localhost:3000/api/transactions/update/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ keterangan: editValue }) });
+        else if (type === 'expense') await fetch('http://localhost:3000/api/expenses', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newExpense) });
+        setModalConfig({ ...modalConfig, isOpen: false }); fetchData();
+    } catch (error) { alert("Gagal memproses data"); }
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
   };
 
   const handleStatusComplaint = async (id, status) => { await fetch(`http://localhost:3000/api/complaints/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status}) }); fetchData(); };
@@ -74,13 +104,22 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
+<<<<<<< HEAD
+=======
+      
+      {/* SIDEBAR (TEMA GANTENG PARAH) */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
       <aside className="w-72 bg-slate-900 text-white hidden md:flex flex-col fixed h-full z-20 shadow-2xl">
         <div className="p-8 pb-4">
             <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 tracking-tighter">DYKAYA ADMIN</h1>
             <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Management System</p>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
+<<<<<<< HEAD
           {[ { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'kamar', label: 'Data Kamar', icon: Home }, { id: 'penghuni', label: 'Data Penghuni', icon: Users }, { id: 'keluhan', label: 'Keluhan', icon: Wrench, count: complaints.filter(c=>c.status==='pending').length }, { id: 'keuangan', label: 'Keuangan', icon: DollarSign } ].map((menu) => (
+=======
+          {[ { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'penghuni', label: 'Data Penghuni', icon: Users }, { id: 'keluhan', label: 'Keluhan', icon: Wrench, count: complaints.filter(c=>c.status==='pending').length }, { id: 'keuangan', label: 'Keuangan', icon: DollarSign } ].map((menu) => (
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
             <button key={menu.id} onClick={() => setActiveTab(menu.id)} 
                 className={`w-full flex items-center px-5 py-4 rounded-xl transition-all duration-200 group ${activeTab === menu.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
                 <menu.icon size={20} className={`mr-3 ${activeTab === menu.id ? 'text-white' : 'text-slate-500 group-hover:text-white'}`}/> 
@@ -103,6 +142,10 @@ const AdminDashboard = () => {
             <button onClick={() => navigate('/')} className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition flex items-center gap-2"><ArrowLeft size={16}/> Web Utama</button>
         </div>
 
+<<<<<<< HEAD
+=======
+        {/* DASHBOARD WIDGETS */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
         {activeTab === 'dashboard' && (
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition">
@@ -120,6 +163,7 @@ const AdminDashboard = () => {
              </div>
         )}
 
+<<<<<<< HEAD
         {/* TABEL KAMAR BARU (GROUPING) */}
         {activeTab === 'kamar' && (
             <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden animate-fade-in">
@@ -186,6 +230,9 @@ const AdminDashboard = () => {
         )}
 
         {/* TABEL PENGHUNI */}
+=======
+        {/* TABEL PENGHUNI (REVISI DESIGN: TANPA AVATAR, LEBIH CLEAN) */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
         {activeTab === 'penghuni' && (
             <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden animate-fade-in">
                 <table className="w-full text-left border-collapse">
@@ -194,6 +241,7 @@ const AdminDashboard = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-50 text-sm">
                         {bookings.map(item => {
+<<<<<<< HEAD
                             let displayName = item.keterangan;
                             let displayPhone = "";
                             const match = item.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/);
@@ -201,6 +249,20 @@ const AdminDashboard = () => {
 
                             return (
                                 <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
+=======
+                            // LOGIKA BERSIHIN NAMA (Regex)
+                            let displayName = item.keterangan;
+                            let displayPhone = "";
+                            const match = item.keterangan.match(/a\.n\s+(.*?)\s+\((.*?)\)/);
+                            if (match) { 
+                                displayName = match[1]; 
+                                displayPhone = match[2]; 
+                            }
+
+                            return (
+                                <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
+                                    {/* Kolom Kamar */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
                                     <td className="p-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex flex-col items-center justify-center shadow-lg shadow-slate-200">
@@ -212,6 +274,11 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                     </td>
+<<<<<<< HEAD
+=======
+
+                                    {/* Kolom Penghuni (Desain Baru Clean) */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
                                     <td className="p-6">
                                         <div>
                                             <div className="text-lg font-bold text-slate-800 tracking-tight">{displayName}</div>
@@ -228,12 +295,22 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                     </td>
+<<<<<<< HEAD
+=======
+
+                                    {/* Kolom Status */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
                                     <td className="p-6">
                                         {item.status_verifikasi === 'approved' ? (item.sisa_hari < 0 ? <span className="px-3 py-1 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold border border-rose-200">Telat {Math.abs(item.sisa_hari)} Hari</span> : <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">Lunas ({item.sisa_hari} Hari)</span>) : 
                                         item.status_verifikasi === 'waiting_payment' ? <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold border border-blue-200 animate-pulse">Menunggu Transfer</span> :
                                         item.status_verifikasi === 'verification' ? <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold border border-purple-200">Cek Bukti</span> :
                                         <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold border border-amber-200">Pending</span>}
                                     </td>
+<<<<<<< HEAD
+=======
+
+                                    {/* Kolom Aksi */}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
                                     <td className="p-6 flex justify-center gap-2">
                                         {item.status_verifikasi === 'pending' && <button onClick={()=>openStatusModal(item.id, 'waiting_payment')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-md transition">Ada Kamar</button>}
                                         {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
@@ -264,6 +341,7 @@ const AdminDashboard = () => {
             <div className={`bg-white w-full ${modalConfig.type === 'view_proof' ? 'max-w-lg' : 'max-w-md'} rounded-[2rem] p-8 relative z-10 shadow-2xl animate-fade-in-up`}>
                 <h3 className="text-xl font-bold mb-2 text-slate-900">{modalConfig.title}</h3>
                 <p className="mb-6 text-slate-500 leading-relaxed text-sm">{modalConfig.message}</p>
+<<<<<<< HEAD
                 
                 {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto object-contain"/> : <div className="p-8 text-center text-slate-400 text-sm">Belum ada bukti yang diupload user ini.</div>}</div>)}
                 {modalConfig.type === 'expense' && <div className="space-y-3 mb-6"><input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Nama Pengeluaran" value={newExpense.nama} onChange={e=>setNewExpense({...newExpense, nama: e.target.value})}/><input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Biaya (Rp)" value={newExpense.biaya} onChange={e=>setNewExpense({...newExpense, biaya: e.target.value})}/><input type="date" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newExpense.tanggal} onChange={e=>setNewExpense({...newExpense, tanggal: e.target.value})}/></div>}
@@ -323,6 +401,14 @@ const AdminDashboard = () => {
                     )}
                     <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition">{modalConfig.type === 'view_proof' ? 'Tutup' : 'Batal'}</button>
                     {modalConfig.type !== 'view_proof' && <button onClick={confirmAction} className={`flex-1 py-4 text-white rounded-xl font-bold shadow-lg transition ${modalConfig.type === 'delete_room' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/30' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'}`}>Konfirmasi</button>}
+=======
+                {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto object-contain"/> : <div className="p-8 text-center text-slate-400 text-sm">Belum ada bukti yang diupload user ini.</div>}</div>)}
+                {modalConfig.type==='edit'&&<input className="w-full bg-slate-50 border-0 p-4 rounded-xl mb-6 font-medium focus:ring-2 focus:ring-blue-500 transition" value={editValue} onChange={e=>setEditValue(e.target.value)}/>}
+                {modalConfig.type==='expense'&&<div className="space-y-3 mb-6"><input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Nama Pengeluaran" value={newExpense.nama} onChange={e=>setNewExpense({...newExpense, nama: e.target.value})}/><input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Biaya (Rp)" value={newExpense.biaya} onChange={e=>setNewExpense({...newExpense, biaya: e.target.value})}/><input type="date" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newExpense.tanggal} onChange={e=>setNewExpense({...newExpense, tanggal: e.target.value})}/></div>}
+                <div className="flex gap-3">
+                    <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition">{modalConfig.type === 'view_proof' ? 'Tutup' : 'Batal'}</button>
+                    {modalConfig.type !== 'view_proof' && <button onClick={confirmAction} className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition">Konfirmasi</button>}
+>>>>>>> 8c7ccbb100a29a4553be3d1de7dbd3c492742ccf
                 </div>
             </div>
         </div>
