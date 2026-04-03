@@ -37,7 +37,10 @@ const AdminDashboard = () => {
   const openDeleteModal = (id, nama) => { setModalConfig({ isOpen: true, type: 'delete', id: id, title: 'Hapus Data?', message: `Hapus data "${nama}"?`, data: null }); };
   const openExpenseModal = () => { setNewExpense({ nama: '', biaya: '', tanggal: '' }); setModalConfig({ isOpen: true, type: 'expense', id: null, title: 'Catat Pengeluaran', message: '', data: null }); };
 
-  const openAddRoomModal = () => { setNewRoom({ nomor_kamar: '', tipe_kamar: '', harga_bulanan: '', fasilitas: '', status: 'tersedia', foto_kamar: '' }); setModalConfig({ isOpen: true, type: 'add_room', id: null, title: 'Tambah Kamar Baru', message: 'Masukkan detail kamar:', data: { isNewType: true } }); };
+  const openAddRoomModal = () => { 
+    setNewRoom({ nomor_kamar: '', tipe_kamar: '', harga_bulanan: '', fasilitas: '', status: 'tersedia', foto_kamar: '' }); 
+    setModalConfig({ isOpen: true, type: 'add_room', id: null, title: 'Tambah Kamar Baru', message: 'Masukkan detail kamar lengkap:', data: { isNewType: true } }); 
+  };
   
   const openEditRoomModal = (room) => { 
     setNewRoom(room); 
@@ -59,43 +62,34 @@ const AdminDashboard = () => {
         if (['approved', 'waiting_payment', 'rejected'].includes(type)) {
             await fetch(`/api/transactions/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: type}) });
         } 
-        // --- INI BAGIAN YANG DIGANTI/DIPERBAIKI ---
         else if (type === 'delete') {
-            console.log("Menghapus Transaksi ID:", id); 
-            await fetch(`/api/transactions/${id}`, { 
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            });
+            await fetch(`/api/transactions/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
         } 
-        // ------------------------------------------
         else if (type === 'expense') {
             await fetch('/api/expenses', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newExpense) });
-        } else if (type === 'add_room') {
+        } 
+        else if (type === 'add_room') {
             await fetch('/api/rooms', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newRoom) });
-        } else if (type === 'edit_room') {
+        } 
+        else if (type === 'edit_room') {
             await fetch(`/api/rooms/${id}`, { 
                 method: 'PUT', 
                 headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify({
-                    nomor_kamar: newRoom.nomor_kamar,
-                    tipe_kamar: newRoom.tipe_kamar,
-                    harga_bulanan: newRoom.harga_bulanan,
-                    fasilitas: newRoom.fasilitas,
-                    status: newRoom.status
-                }) 
+                body: JSON.stringify(newRoom) 
             });
-        } else if (type === 'delete_room') {
+        } 
+        else if (type === 'delete_room') {
             await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
-        } else if (type === 'edit_tipe') {
+        } 
+        else if (type === 'edit_tipe') {
             await fetch('/api/rooms/update-tipe', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editTipe) });
         }
 
-        // Tutup modal dan refresh data
         setModalConfig({ ...modalConfig, isOpen: false }); 
         fetchData();
     } catch (error) { 
-        console.error("Error saat eksekusi aksi:", error);
-        alert("Gagal memproses data. Cek koneksi server."); 
+        console.error("Error aksi:", error);
+        alert("Gagal memproses data."); 
     }
   };
 
@@ -139,7 +133,7 @@ const AdminDashboard = () => {
         </div>
 
         {activeTab === 'dashboard' && (
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
                     <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><UserCheck size={32}/></div>
                     <div><p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Permintaan Baru</p><h3 className="text-3xl font-black text-slate-800">{bookings.filter(b => b.status_verifikasi === 'pending').length}</h3></div>
@@ -156,7 +150,7 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === 'kamar' && (
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden animate-fade-in">
                 <div className="flex justify-between items-center p-6 border-b border-slate-100">
                     <div>
                         <h3 className="font-bold text-lg text-slate-800">Daftar Kamar</h3>
@@ -195,7 +189,7 @@ const AdminDashboard = () => {
                                                   'bg-amber-50 border-amber-100 text-amber-700'}`}>
                                                 <span className="text-lg font-black">{room.nomor_kamar}</span>
                                                 <span className="text-[10px] font-bold uppercase tracking-wider bg-white/50 px-2 py-0.5 rounded-md">{room.status}</span>
-                                                <div className="absolute -top-3 -right-3 bg-blue-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="absolute -top-3 -right-3 bg-blue-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
                                                     <Edit2 size={12}/>
                                                 </div>
                                             </button>
@@ -210,7 +204,7 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === 'penghuni' && (
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden animate-fade-in">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
                         <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
@@ -236,32 +230,26 @@ const AdminDashboard = () => {
                                         <div className="text-slate-500 text-xs font-medium">{displayPhone}</div>
                                     </td>
                                     <td className="p-6">
-                                        {item.status_verifikasi === 'approved' ? (
-                                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">Lunas ({item.sisa_hari} Hari)</span>
-                                        ) : (
-                                            <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
-                                                item.status_verifikasi === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                                item.status_verifikasi === 'verification' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                                                'bg-blue-100 text-blue-700 border-blue-200'
-                                            }`}>
-                                                {item.status_verifikasi}
-                                            </span>
-                                        )}
+                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                                            item.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                            item.status_verifikasi === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                            item.status_verifikasi === 'verification' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                                            'bg-blue-100 text-blue-700 border-blue-200'
+                                        }`}>
+                                            {item.status_verifikasi === 'approved' ? `Lunas (${item.sisa_hari} Hari)` : item.status_verifikasi}
+                                        </span>
                                     </td>
                                     <td className="p-6 flex justify-center gap-2">
-                                        {/* FIX: Tombol Konfirmasi Berdasarkan Status */}
                                         {item.status_verifikasi === 'pending' && (
                                             <button onClick={() => openStatusModal(item.id, 'waiting_payment')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-md">Ada Kamar</button>
                                         )}
-                                        
                                         {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
                                             <>
-                                                <button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200"><Eye size={16}/></button>
+                                                <button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200" title="Lihat Bukti"><Eye size={16}/></button>
                                                 <button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-md">Terima</button>
                                             </>
                                         )}
-                                        
-                                        <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 bg-white border border-slate-200 text-rose-500 rounded-lg hover:bg-rose-50"><Trash2 size={16}/></button>
+                                        <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 bg-white border border-slate-200 text-rose-500 rounded-lg hover:bg-rose-50" title="Hapus"><Trash2 size={16}/></button>
                                     </td>
                                 </tr>
                             );
@@ -271,8 +259,8 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {activeTab === 'keluhan' && (<div className="grid gap-4">{complaints.map(c => (<div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center"><div className="flex gap-4 items-start"><div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div><div><h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4><p className="text-sm text-slate-500 mt-1">{c.isi_keluhan}</p><div className="text-xs text-slate-400 mt-2 font-bold uppercase">{c.nama_lengkap} • Kamar {c.nomor_kamar}</div></div></div>{c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai</span>}</div>))}</div>)}
-        {activeTab === 'keuangan' && (<div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8"><div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"><Printer size={16}/> Print</button></div></div><table className="w-full text-sm"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody>{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table></div>)}
+        {activeTab === 'keluhan' && (<div className="grid gap-4 animate-fade-in">{complaints.map(c => (<div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center"><div className="flex gap-4 items-start"><div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div><div><h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4><p className="text-sm text-slate-500 mt-1">{c.isi_keluhan}</p><div className="text-xs text-slate-400 mt-2 font-bold uppercase">{c.nama_lengkap} • Kamar {c.nomor_kamar}</div></div></div>{c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai</span>}</div>))}</div>)}
+        {activeTab === 'keuangan' && (<div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 animate-fade-in"><div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div><table className="w-full text-sm"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody>{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table></div>)}
 
         {modalConfig.isOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -281,16 +269,25 @@ const AdminDashboard = () => {
                     <h3 className="text-xl font-bold mb-2 text-slate-900">{modalConfig.title}</h3>
                     <p className="mb-6 text-slate-500 text-sm">{modalConfig.message}</p>
                     
-                    {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl overflow-hidden border">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto object-contain"/> : <div className="p-8 text-center text-slate-400">Belum ada bukti upload.</div>}</div>)}
+                    {modalConfig.type === 'view_proof' && (<div className="mb-6 bg-slate-100 rounded-xl overflow-hidden border">{modalConfig.data ? <img src={modalConfig.data} className="w-full h-auto object-contain" alt="Bukti"/> : <div className="p-8 text-center text-slate-400">Belum ada bukti upload.</div>}</div>)}
                     
                     {(modalConfig.type === 'add_room' || modalConfig.type === 'edit_room') && (
-                        <div className="space-y-3 mb-6">
+                        <div className="space-y-3 mb-6 overflow-y-auto max-h-[60vh] px-2">
                             <label className="block text-xs font-bold text-slate-400 uppercase">Nomor Kamar</label>
-                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" value={newRoom.nomor_kamar} onChange={e=>setNewRoom({...newRoom, nomor_kamar: e.target.value})}/>
+                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl font-bold" placeholder="Contoh: 101" value={newRoom.nomor_kamar} onChange={e=>setNewRoom({...newRoom, nomor_kamar: e.target.value})}/>
+                            
+                            <label className="block text-xs font-bold text-slate-400 uppercase">Tipe Kamar</label>
+                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="VIP / Standard / Ekonomi" value={newRoom.tipe_kamar} onChange={e=>setNewRoom({...newRoom, tipe_kamar: e.target.value})}/>
+                            
                             <label className="block text-xs font-bold text-slate-400 uppercase">Harga Bulanan</label>
-                            <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newRoom.harga_bulanan} onChange={e=>setNewRoom({...newRoom, harga_bulanan: e.target.value})}/>
+                            <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="900000" value={newRoom.harga_bulanan} onChange={e=>setNewRoom({...newRoom, harga_bulanan: e.target.value})}/>
+                            
                             <label className="block text-xs font-bold text-slate-400 uppercase">Fasilitas</label>
-                            <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl text-sm" value={newRoom.fasilitas} onChange={e=>setNewRoom({...newRoom, fasilitas: e.target.value})}></textarea>
+                            <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl text-sm" placeholder="Contoh: WiFi, Kasur, Lemari" value={newRoom.fasilitas} onChange={e=>setNewRoom({...newRoom, fasilitas: e.target.value})}></textarea>
+                            
+                            <label className="block text-xs font-bold text-slate-400 uppercase">Link Foto Kamar</label>
+                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl text-xs font-mono" placeholder="https://..." value={newRoom.foto_kamar} onChange={e=>setNewRoom({...newRoom, foto_kamar: e.target.value})}/>
+                            
                             <label className="block text-xs font-bold text-slate-400 uppercase">Status</label>
                             <select className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newRoom.status} onChange={e=>setNewRoom({...newRoom, status: e.target.value})}>
                                 <option value="tersedia">Tersedia</option>
@@ -308,6 +305,8 @@ const AdminDashboard = () => {
                             <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.harga_bulanan} onChange={e=>setEditTipe({...editTipe, harga_bulanan: e.target.value})}/>
                             <label className="block text-xs font-bold text-slate-400 uppercase">Fasilitas (Bulk)</label>
                             <textarea className="w-full bg-slate-50 border-0 p-4 rounded-xl h-24" value={editTipe.fasilitas} onChange={e=>setEditTipe({...editTipe, fasilitas: e.target.value})}></textarea>
+                            <label className="block text-xs font-bold text-slate-400 uppercase">Link Foto</label>
+                            <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={editTipe.foto_kamar} onChange={e=>setEditTipe({...editTipe, foto_kamar: e.target.value})}/>
                         </div>
                     )}
 
@@ -319,10 +318,15 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
+                    {modalConfig.type === 'delete' && <div className="text-rose-500 font-bold mb-6">Tindakan ini tidak dapat dibatalkan.</div>}
+                    {modalConfig.type === 'delete_room' && <div className="text-rose-500 font-bold mb-6">Seluruh riwayat kamar ini akan dihapus.</div>}
+
                     <div className="flex gap-3 mt-8">
                         <button onClick={()=>setModalConfig({...modalConfig, isOpen:false})} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
                         {modalConfig.type !== 'view_proof' && (
-                            <button onClick={confirmAction} className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg">Konfirmasi</button>
+                            <button onClick={confirmAction} className={`flex-1 py-4 text-white rounded-xl font-bold shadow-lg ${modalConfig.type.includes('delete') ? 'bg-rose-600' : 'bg-blue-600'}`}>
+                                {modalConfig.type.includes('delete') ? 'Hapus' : 'Konfirmasi'}
+                            </button>
                         )}
                     </div>
                 </div>
