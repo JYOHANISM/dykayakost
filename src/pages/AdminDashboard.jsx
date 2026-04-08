@@ -248,7 +248,7 @@ const AdminDashboard = () => {
                                 <h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4>
                                 <p className="text-sm text-slate-500">{c.isi_keluhan}</p>
                                 <div className="text-xs text-slate-400 mt-2 font-bold uppercase flex items-center gap-2">
-                                    <UserCheck size={12}/> {c.nama_lengkap} • Kamar {c.nomor_kamar} • <Calendar size={12}/> {new Date(c.tanggal_lapor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    <UserCheck size={12}/> {c.nama_lengkap} • Kamar {c.nomor_kamar} • <Calendar size={12}/> {c.tanggal_lapor ? new Date(c.tanggal_lapor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Data Lama'}
                                 </div>
                             </div>
                         </div>
