@@ -1,6 +1,8 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const nodemailer = require('nodemailer'); // TAMBAHAN: Import library email
+require('dotenv').config(); // TAMBAHAN: Buat baca file .env
 
 const app = express();
 
@@ -8,6 +10,15 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// --- SETUP ROBOT PENGIRIM EMAIL (Nodemailer) ---
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // --- KONEKSI DATABASE (POOLING) ---
 const db = mysql.createPool({
@@ -53,7 +64,7 @@ app.post('/api/rooms', (req, res) => {
     });
 });
 
-// 3. UPDATE TIPE (MASSAL) - WAJIB DI ATAS RUTE :id
+// 3. UPDATE TIPE (MASSAL)
 app.put('/api/rooms/update-tipe', (req, res) => {
     const { tipe_kamar_lama, tipe_kamar_baru, harga_bulanan, fasilitas, foto_kamar } = req.body;
     const sql = "UPDATE rooms SET tipe_kamar=?, harga_bulanan=?, fasilitas=?, foto_kamar=? WHERE tipe_kamar=?";
@@ -82,12 +93,17 @@ app.delete('/api/rooms/:id', (req, res) => {
     });
 });
 
-// 6. LOGIN
+// 6. LOGIN (DIUBAH: ADA PENGECEKAN OTP)
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     db.query("SELECT * FROM users WHERE email = ? AND password = ?", [email, password], (err, data) => {
         if(err) return res.status(500).json(err);
         if(data.length > 0) {
+            // CEK STATUS OTP
+            if (data[0].is_verified === 0) {
+                return res.json({ status: "Fail", message: "Akun belum diverifikasi! Silakan cek email Anda untuk OTP." });
+            }
+
             return res.json({ 
                 status: "Success", 
                 role: data[0].role, 
@@ -99,7 +115,7 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 7. REGISTER
+// 7. REGISTER (DIUBAH: GENERATE OTP & KIRIM EMAIL)
 app.post('/api/register', (req, res) => {
     const { nama, email, password, no_hp } = req.body;
     if (!email || !password) return res.json({ status: "Fail", message: "Email/Password wajib diisi!" });
@@ -108,10 +124,51 @@ app.post('/api/register', (req, res) => {
         if (err) return res.status(500).json(err);
         if (data.length > 0) return res.json({ status: "Fail", message: "Email sudah terdaftar!" });
 
-        const sql = "INSERT INTO users (nama_lengkap, email, password, no_hp, role) VALUES (?, ?, ?, ?, 'penyewa')";
-        db.query(sql, [nama, email, password, no_hp], (err) => {
+        // Generate 4 digit angka acak (contoh: 8492)
+        const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // Insert ke DB (tambah otp_code dan set is_verified = 0)
+        const sql = "INSERT INTO users (nama_lengkap, email, password, no_hp, role, otp_code, is_verified) VALUES (?, ?, ?, ?, 'penyewa', ?, 0)";
+        db.query(sql, [nama, email, password, no_hp, otpCode], (err) => {
             if (err) return res.status(500).json(err);
-            return res.json({ status: "Success" });
+
+            // Settingan Email OTP
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Kode OTP Registrasi Kost Dykaya',
+                text: `Halo ${nama},\n\nTerima kasih telah mendaftar di Kost Dykaya.\n\nKode OTP pendaftaran Anda adalah: ${otpCode}\n\nSilakan masukkan kode ini di aplikasi untuk mengaktifkan akun Anda.`
+            };
+
+            // Kirim Emailnya
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("Gagal kirim email OTP:", error);
+                    return res.json({ status: "Fail", message: "Gagal mengirim email OTP, pastikan email aktif." });
+                }
+                return res.json({ status: "Success", message: "Registrasi berhasil, silakan cek email untuk kode OTP." });
+            });
+        });
+    });
+});
+
+// 7.5. VERIFIKASI OTP (RUTE BARU)
+app.post('/api/verify-otp', (req, res) => {
+    const { email, otp } = req.body;
+
+    const sql = "SELECT * FROM users WHERE email = ? AND otp_code = ?";
+    db.query(sql, [email, otp], (err, data) => {
+        if (err) return res.status(500).json(err);
+        
+        if (data.length === 0) {
+            return res.json({ status: "Fail", message: "Kode OTP salah atau email tidak ditemukan!" });
+        }
+
+        // Kalau benar, aktifkan is_verified = 1 dan hapus otp_code
+        const updateSql = "UPDATE users SET is_verified = 1, otp_code = NULL WHERE email = ?";
+        db.query(updateSql, [email], (updateErr) => {
+            if (updateErr) return res.status(500).json(updateErr);
+            return res.json({ status: "Success", message: "Verifikasi berhasil! Silakan login." });
         });
     });
 });
@@ -215,7 +272,6 @@ app.get('/api/complaints', (req, res) => {
     });
 });
 
-// INI YANG TADI HILANG BRO: UPDATE STATUS KELUHAN
 app.put('/api/complaints/:id', (req, res) => {
     const { status } = req.body;
     db.query("UPDATE complaints SET status = ? WHERE id = ?", [status, req.params.id], (err) => {
