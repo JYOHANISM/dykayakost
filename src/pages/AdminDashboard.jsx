@@ -37,6 +37,9 @@ const AdminDashboard = () => {
   const openDeleteModal = (id, nama) => { setModalConfig({ isOpen: true, type: 'delete', id: id, title: 'Hapus Data?', message: `Hapus data "${nama}"?`, data: null }); };
   const openExpenseModal = () => { setNewExpense({ nama: '', biaya: '', tanggal: '' }); setModalConfig({ isOpen: true, type: 'expense', id: null, title: 'Catat Pengeluaran', message: '', data: null }); };
 
+  // --- TAMBAHAN: FUNGSI BUKA MODAL HAPUS KELUHAN ---
+  const openDeleteComplaintModal = (id, judul) => { setModalConfig({ isOpen: true, type: 'delete_complaint', id: id, title: 'Hapus Keluhan?', message: `Yakin ingin menghapus keluhan "${judul}" secara permanen?`, data: null }); };
+
   const openAddRoomModal = () => { 
     setNewRoom({ nomor_kamar: '', tipe_kamar: '', harga_bulanan: '', fasilitas: '', status: 'tersedia', foto_kamar: '' }); 
     setModalConfig({ isOpen: true, type: 'add_room', id: null, title: 'Tambah Kamar Baru', message: 'Masukkan detail kamar lengkap:', data: { isNewType: true } }); 
@@ -80,6 +83,10 @@ const AdminDashboard = () => {
         else if (type === 'edit_tipe') {
             await fetch('/api/rooms/update-tipe', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editTipe) });
         }
+        // --- TAMBAHAN: EKSEKUSI HAPUS KELUHAN KE BACKEND ---
+        else if (type === 'delete_complaint') {
+            await fetch(`/api/complaints/${id}`, { method: 'DELETE' });
+        }
 
         setModalConfig({ ...modalConfig, isOpen: false }); 
         fetchData();
@@ -102,7 +109,16 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => { localStorage.clear(); navigate('/login'); };
-  const profit = bookings.filter(b => b.status_verifikasi === 'approved').reduce((t, i) => t + parseInt(i.harga_bulanan || 0), 0) - expenses.reduce((t, i) => t + parseInt(i.biaya || 0), 0);
+
+  // --- FILTER KEUANGAN (HANYA NAMPILIN 30 HARI TERAKHIR) ---
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); // Set waktu jadi 1 bulan ke belakang
+
+  const recentIncomes = bookings.filter(b => b.status_verifikasi === 'approved' && new Date(b.tanggal_transaksi) >= thirtyDaysAgo);
+  const recentExpenses = expenses.filter(e => new Date(e.tanggal_pengeluaran) >= thirtyDaysAgo);
+
+  // Profit sekarang dihitung cuma dari pendapatan dan pengeluaran 1 bulan terakhir aja!
+  const profit = recentIncomes.reduce((t, i) => t + parseInt(i.harga_bulanan || 0), 0) - recentExpenses.reduce((t, i) => t + parseInt(i.biaya || 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
@@ -147,7 +163,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="bg-blue-600 p-6 rounded-3xl shadow-lg text-white flex items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><Wallet size={32}/></div>
-                    <div><p className="text-blue-100 text-xs font-bold uppercase tracking-wider">Profit Bersih</p><h3 className="text-3xl font-black">Rp {(profit/1000000).toFixed(1)}Jt</h3></div>
+                    <div><p className="text-blue-100 text-xs font-bold uppercase tracking-wider">Profit Bersih <span className="text-[9px]">(30 Hr)</span></p><h3 className="text-3xl font-black">Rp {(profit/1000000).toFixed(1)}Jt</h3></div>
                 </div>
              </div>
         )}
@@ -237,31 +253,82 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* --- DIUBAH: NAMPILIN TANGGAL LAPORAN DI KELUHAN ADMIN --- */}
+        {/* --- DIUBAH: ADA TOMBOL HAPUS (TRASH) DI SETIAP KELUHAN --- */}
         {activeTab === 'keluhan' && (
             <div className="grid gap-4">
-                {complaints.map(c => (
-                    <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
-                        <div className="flex gap-4 items-start">
-                            <div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div>
-                            <div>
-                                <h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4>
-                                <p className="text-sm text-slate-500">{c.isi_keluhan}</p>
-                                <div className="text-xs text-slate-400 mt-2 font-bold uppercase flex items-center gap-2">
-                                    <UserCheck size={12}/> {c.nama_lengkap} • Kamar {c.nomor_kamar} • <Calendar size={12}/> {c.tanggal_lapor ? new Date(c.tanggal_lapor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Data Lama'}
+                {complaints.length === 0 ? (
+                    <div className="text-center py-10 bg-white rounded-3xl border border-slate-100">
+                        <AlertTriangle className="mx-auto text-slate-300 w-12 h-12 mb-3"/>
+                        <h3 className="font-bold text-slate-500">Belum ada keluhan masuk.</h3>
+                    </div>
+                ) : (
+                    complaints.map(c => (
+                        <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center group transition-all hover:shadow-md">
+                            <div className="flex gap-4 items-start">
+                                <div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div>
+                                <div>
+                                    <h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4>
+                                    <p className="text-sm text-slate-500">{c.isi_keluhan}</p>
+                                    <div className="text-xs text-slate-400 mt-2 font-bold uppercase flex items-center gap-2">
+                                        <UserCheck size={12}/> {c.nama_lengkap} • Kamar {c.nomor_kamar} • <Calendar size={12}/> {c.tanggal_lapor ? new Date(c.tanggal_lapor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Data Lama'}
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <div className="flex items-center gap-2">
+                                {c.status !== 'selesai' ? (
+                                    <button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100 transition">Selesaikan</button>
+                                ) : (
+                                    <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai ✅</span>
+                                )}
+                                {/* Tombol Hapus Keluhan */}
+                                <button onClick={() => openDeleteComplaintModal(c.id, c.judul_keluhan)} className="p-2 text-rose-400 bg-rose-50 rounded-xl hover:bg-rose-500 hover:text-white transition opacity-0 group-hover:opacity-100">
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
                         </div>
-                        {c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai ✅</span>}
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         )}
 
+        {/* --- DIUBAH: TABEL KEUANGAN MENGGUNAKAN DATA FILTER 30 HARI --- */}
         {activeTab === 'keuangan' && (
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
-                <div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div>
-                <table className="w-full text-sm"><thead className="bg-slate-50 font-bold text-xs uppercase"><tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr></thead><tbody>{bookings.filter(b=>b.status_verifikasi==='approved').map(b=>(<tr key={'in-'+b.id}><td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td><td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td><td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td></tr>))}{expenses.map(e=>(<tr key={'out-'+e.id} className="bg-rose-50/30"><td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td><td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td><td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td></tr>))}</tbody></table>
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 className="font-bold text-xl">Arus Kas (30 Hari Terakhir)</h3>
+                        <p className="text-xs text-slate-500 mt-1">Data lama disembunyikan otomatis untuk menjaga kerapian layar.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button>
+                        <button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button>
+                    </div>
+                </div>
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-50 font-bold text-xs uppercase">
+                        <tr><th className="p-4 text-left">Tanggal</th><th className="p-4 text-left">Keterangan</th><th className="p-4 text-right">Nominal</th></tr>
+                    </thead>
+                    <tbody>
+                        {recentIncomes.map(b => (
+                            <tr key={'in-'+b.id}>
+                                <td className="p-4">{new Date(b.tanggal_transaksi).toLocaleDateString()}</td>
+                                <td className="p-4 font-medium">Sewa Kamar {b.nomor_kamar}</td>
+                                <td className="p-4 text-right font-bold text-emerald-600">+ Rp {parseInt(b.harga_bulanan).toLocaleString()}</td>
+                            </tr>
+                        ))}
+                        {recentExpenses.map(e => (
+                            <tr key={'out-'+e.id} className="bg-rose-50/30">
+                                <td className="p-4">{new Date(e.tanggal_pengeluaran).toLocaleDateString()}</td>
+                                <td className="p-4 font-medium text-rose-800">{e.nama_pengeluaran}</td>
+                                <td className="p-4 text-right font-bold text-rose-600">- Rp {parseInt(e.biaya).toLocaleString()}</td>
+                            </tr>
+                        ))}
+                        {recentIncomes.length === 0 && recentExpenses.length === 0 && (
+                            <tr><td colSpan="3" className="p-8 text-center text-slate-400 font-medium">Belum ada transaksi di bulan ini.</td></tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
         )}
       </main>

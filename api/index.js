@@ -283,6 +283,14 @@ app.put('/api/complaints/:id', (req, res) => {
     });
 });
 
+// HAPUS KELUHAN
+app.delete('/api/complaints/:id', (req, res) => {
+    db.query("DELETE FROM complaints WHERE id = ?", [req.params.id], (err) => {
+        if(err) return res.status(500).json(err);
+        return res.json({ status: "Success" });
+    });
+});
+
 // 14. EXPENSES
 app.get('/api/expenses', (req, res) => {
     db.query("SELECT * FROM expenses ORDER BY tanggal_pengeluaran DESC", (err, data) => {
