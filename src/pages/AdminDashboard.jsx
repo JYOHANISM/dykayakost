@@ -23,8 +23,6 @@ const AdminDashboard = () => {
     fetch('/api/rooms').then(res=>res.json()).then(data=>setRooms(data)).catch(err => console.error(err));
   };
 
-  useEffect(() => { fetchData(); }, []);
-
   // --- SATPAM ADMIN ---
   useEffect(() => { 
     const role = localStorage.getItem('userRole');
