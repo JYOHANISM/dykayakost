@@ -40,15 +40,21 @@ const UserDashboard = () => {
         .catch(() => setLoading(false));
   };
 
+// --- SATPAM USER ---
   useEffect(() => { 
-    if (!userId) navigate('/login'); 
-    else fetchData(); 
+    const role = localStorage.getItem('userRole');
+    
+    if (!userId) {
+        // Kalau belum login, lempar ke Login
+        navigate('/login'); 
+    } else if (role === 'admin') {
+        // Kalau Admin malah nyasar ke sini, balikin ke markasnya!
+        navigate('/admin');
+    } else {
+        // Kalau aman, baru tampilin datanya
+        fetchData(); 
+    }
   }, [userId, navigate]);
-
-  const handleLogout = () => { 
-    localStorage.clear(); 
-    navigate('/login'); 
-  };
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);

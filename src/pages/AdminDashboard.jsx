@@ -25,6 +25,18 @@ const AdminDashboard = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // --- SATPAM ADMIN ---
+  useEffect(() => { 
+    const role = localStorage.getItem('userRole');
+    
+    // Kalau yang nyoba masuk BUKAN admin, tendang balik ke Beranda!
+    if (role !== 'admin') {
+        navigate('/');
+    } else {
+        fetchData(); 
+    }
+  }, [navigate]);
+
   const openStatusModal = (id, status) => {
     let title = '', msg = '';
     if (status === 'waiting_payment') { title = 'Konfirmasi Ketersediaan?'; msg = 'User akan diminta melakukan pembayaran.'; }
@@ -279,7 +291,7 @@ const AdminDashboard = () => {
                                 {c.status !== 'selesai' ? (
                                     <button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100 transition">Selesaikan</button>
                                 ) : (
-                                    <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai ✅</span>
+                                    <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai</span>
                                 )}
                                 {/* Tombol Hapus Keluhan */}
                                 <button onClick={() => openDeleteComplaintModal(c.id, c.judul_keluhan)} className="p-2 text-rose-400 bg-rose-50 rounded-xl hover:bg-rose-500 hover:text-white transition opacity-0 group-hover:opacity-100">
