@@ -177,8 +177,8 @@ app.post('/api/verify-otp', (req, res) => {
 app.get('/api/transactions', (req, res) => {
     const sql = `
         SELECT t.*, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
-        DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY) as jatuh_tempo,
-        DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY), NOW()) as sisa_hari
+        DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
+        DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
         FROM transactions t JOIN rooms r ON t.room_id = r.id ORDER BY t.tanggal_transaksi DESC`;
     db.query(sql, (err, data) => {
         if (err) return res.status(500).json(err);
@@ -188,40 +188,38 @@ app.get('/api/transactions', (req, res) => {
 
 // 9. BOOKING AWAL (USER)
 app.post('/api/book', (req, res) => {
-    const { nama, no_hp, room_id, tipe_kamar, user_id } = req.body;
-    const keterangan = `Booking ${tipe_kamar} a.n ${nama} (${no_hp})`;
-    const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'pending', ?)";
-    db.query(sql, [user_id, room_id, keterangan], (err) => {
+    const { nama, no_hp, room_id, tipe_kamar, user_id, durasi } = req.body;
+    
+    // Kalau durasi nggak dipilih, anggap 1 Bulan
+    const durasiSewa = durasi || 1; 
+    const keterangan = `Booking ${tipe_kamar} (${durasiSewa} Bulan) a.n ${nama} (${no_hp})`;
+    
+    const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan, durasi_sewa) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'pending', ?, ?)";
+    
+    db.query(sql, [user_id, room_id, keterangan, durasiSewa], (err) => {
         if (err) return res.status(500).json(err);
         return res.json({ status: "Success" });
     });
 });
 
-// 10. UPDATE TRANSACTION (ACC/BAYAR)
-app.put('/api/transactions/:id', (req, res) => {
-    const { id } = req.params;
-    const { status, bukti_img } = req.body;
-    let sql = "UPDATE transactions SET status_verifikasi = ? WHERE id = ?";
-    let params = [status, id];
-
-    if (status === 'verification') {
-        sql = "UPDATE transactions SET status_verifikasi = ?, bukti_bayar = ? WHERE id = ?";
-        params = [status, bukti_img, id];
-    } else if (status === 'approved') {
-        sql = "UPDATE transactions SET status_verifikasi = ?, tanggal_approve = NOW() WHERE id = ?";
-    }
-
-    db.query(sql, params, (err) => {
+// 12. GET MY BILL (USER)
+app.get('/api/my-bill/:userId', (req, res) => {
+    const sql = `
+        SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
+        DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
+        DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
+        FROM transactions t JOIN rooms r ON t.room_id = r.id
+        WHERE t.user_id = ? AND t.status_verifikasi != 'rejected' ORDER BY t.tanggal_transaksi DESC LIMIT 1`;
+    db.query(sql, [req.params.userId], (err, data) => {
         if (err) return res.status(500).json(err);
-        if (status === 'approved' || status === 'rejected') {
-            db.query("SELECT room_id FROM transactions WHERE id = ?", [id], (err, data) => {
-                if (data.length > 0) {
-                    const nextStatus = status === 'approved' ? 'terisi' : 'tersedia';
-                    db.query("UPDATE rooms SET status = ? WHERE id = ?", [nextStatus, data[0].room_id]);
-                }
-            });
+        
+        if (data.length > 0) {
+            // Kalikan harga sewa dengan durasi bulan biar tagihannya bener
+            data[0].harga_bulanan = data[0].harga_bulanan * (data[0].durasi_sewa || 1);
+            return res.json({ status: "Found", data: data[0] });
+        } else {
+            return res.json({ status: "NoData" });
         }
-        return res.json({ status: "Success" });
     });
 });
 

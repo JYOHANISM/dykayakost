@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, XCircle, ChevronRight, Zap, Phone, Wifi, Car, Utensils, ShieldCheck, Menu, X, User, BedDouble, Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { MapPin, XCircle, Menu, X, User, BedDouble, Lock, CheckCircle, AlertCircle, Wifi, Utensils, Car, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
@@ -15,16 +15,16 @@ const Home = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
-  // STATE FORM & ERROR
+  // STATE FORM & ERROR (DIUBAH: Tambah durasi)
   const [selectedType, setSelectedType] = useState(null); 
   const [bookingTargetId, setBookingTargetId] = useState(null); 
-  const [formData, setFormData] = useState({ nama: '', no_hp: '' });
+  const [formData, setFormData] = useState({ nama: '', no_hp: '', durasi: 1 });
   const [formError, setFormError] = useState(''); 
   
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // --- FETCH DATA (URL RELATIF UNTUK VERCEL) ---
+  // --- FETCH DATA ---
   useEffect(() => {
     const savedName = localStorage.getItem('userName');
     const savedRole = localStorage.getItem('userRole');
@@ -33,7 +33,6 @@ const Home = () => {
         setUserRole(savedRole);
     }
 
-    // Ganti localhost jadi /api
     fetch('/api/rooms')
       .then((response) => response.json())
       .then((data) => {
@@ -68,7 +67,8 @@ const Home = () => {
     setFormError(''); 
     
     const savedName = localStorage.getItem('userName');
-    setFormData({ nama: savedName || '', no_hp: '' });
+    // Set default durasi ke 1 Bulan saat buka modal
+    setFormData({ nama: savedName || '', no_hp: '', durasi: 1 });
     setIsModalOpen(true);
   };
 
@@ -81,7 +81,6 @@ const Home = () => {
     const loggedInUserId = localStorage.getItem('userId');
 
     try {
-        // Ganti localhost jadi /api
         const response = await fetch('/api/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -90,7 +89,8 @@ const Home = () => {
                 no_hp: formData.no_hp,
                 room_id: bookingTargetId, 
                 tipe_kamar: selectedType.tipe_kamar,
-                user_id: loggedInUserId
+                user_id: loggedInUserId,
+                durasi: formData.durasi // MENGIRIM DURASI KE BACKEND
             })
         });
         const result = await response.json();
@@ -98,7 +98,7 @@ const Home = () => {
         if(result.status === "Success") {
             setIsModalOpen(false);
             setShowSuccessModal(true); 
-            setFormData({ nama: '', no_hp: '' });
+            setFormData({ nama: '', no_hp: '', durasi: 1 });
         } else {
             setFormError("Gagal booking, coba lagi nanti.");
         }
@@ -121,15 +121,9 @@ const Home = () => {
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <a href="#" className="flex items-center gap-3" onClick={() => window.scrollTo(0,0)}>
-                {/* --- BAGIAN YANG DIGANTI: LOGO ICON --- */}
-                {/* Menghapus div bg-blue-600 lama, diganti div pembungkus gambar */}
                 <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
-                    {/* Pastikan file 'logo-baru.png' ada di folder 'public' */}
                     <img src="/logo-baru.png" alt="Logo Dykaya Baru" className="w-full h-full object-contain" />
                 </div>
-                {/* --- AKHIR BAGIAN YANG DIGANTI --- */}
-
-                {/* TEXT TETAP SAMA, TIDAK DIGANTI */}
                 <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1>
                     <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
@@ -219,7 +213,7 @@ const Home = () => {
                     </div>
                 </div>
                 <div className="h-64 bg-slate-800 rounded-3xl overflow-hidden border-4 border-slate-700">
-                    <iframe title="Lokasi" src="https://maps.google.com/maps?q=Malang&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
+                    <iframe title="Lokasi" src="https://maps.google.com/maps?q=Jl.%20Taman%20Bunga%20Merak%20II%20No.62,%20Lowokwaru,%20Malang&t=&z=15&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} loading="lazy"></iframe>
                 </div>
             </div>
             <div className="border-t border-slate-800 mt-16 pt-8 text-center text-slate-500 text-sm">© 2026 Kost Dykaya Malang. All Rights Reserved.</div>
@@ -248,40 +242,101 @@ const Home = () => {
             <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 p-8 text-center animate-fade-in">
                 <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={32} /></div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Booking Berhasil!</h3>
-                <p className="text-slate-500 mb-8 text-sm">Admin akan segera menghubungi via WhatsApp untuk konfirmasi.</p>
+                <p className="text-slate-500 mb-8 text-sm">Silakan masuk ke Dashboard Anda untuk menyelesaikan pembayaran.</p>
                 <button onClick={handleCloseSuccess} className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition">OK, Siap!</button>
             </div>
         </div>
       )}
 
+      {/* --- MODAL BOOKING DIUBAH MENJADI 2 KOLOM --- */}
       {isModalOpen && selectedType && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-fade-in">
-                <div className="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center">
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900">Booking {selectedType.tipe_kamar}</h3>
-                        <p className="text-sm text-green-600 font-medium">Sistem memilihkan unit terbaik untukmu.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+            
+            {/* Lebar modal dinaikkan ke max-w-4xl biar cukup 2 kolom */}
+            <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl relative z-10 overflow-hidden animate-fade-in flex flex-col md:flex-row">
+                
+                {/* TOMBOL CLOSE */}
+                <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 p-2 bg-white/50 backdrop-blur-sm hover:bg-slate-200 rounded-full transition z-20 shadow-sm">
+                    <XCircle className="text-slate-600 w-6 h-6" />
+                </button>
+
+                {/* KOLOM KIRI: INFO & GAMBAR KAMAR */}
+                <div className="w-full md:w-5/12 bg-slate-50 flex flex-col border-b md:border-b-0 md:border-r border-slate-200">
+                    <div className="h-48 md:h-64 w-full relative">
+                        <img src={selectedType.foto_kamar} alt={selectedType.tipe_kamar} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900/90 to-transparent p-6">
+                            <h3 className="text-2xl font-bold text-white mb-1">{selectedType.tipe_kamar}</h3>
+                            <p className="text-blue-300 font-bold">Rp {parseInt(selectedType.harga_bulanan).toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-300">/ bulan</span></p>
+                        </div>
                     </div>
-                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition"><XCircle className="text-slate-400 w-6 h-6" /></button>
+                    <div className="p-6 flex-1 bg-slate-100/50">
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Fasilitas Unit Ini</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {selectedType.fasilitas.split(',').map((feat, idx) => (
+                                <span key={idx} className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 shadow-sm">{feat}</span>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <div className="p-8 space-y-4">
+
+                {/* KOLOM KANAN: FORM INPUT & DURASI SEWA */}
+                <div className="w-full md:w-7/12 flex flex-col p-6 md:p-8">
+                    <h3 className="text-xl font-bold text-slate-900 mb-1">Lengkapi Data Booking</h3>
+                    <p className="text-sm text-slate-500 mb-6">Pilih durasi sewa yang sesuai dengan kebutuhanmu.</p>
+
                     {formError && (
-                        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl flex items-center gap-2 text-sm font-bold">
+                        <div className="bg-rose-50 border border-rose-100 text-rose-600 p-3 rounded-xl flex items-center gap-2 text-sm font-bold mb-4">
                             <AlertCircle size={16} /> {formError}
                         </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nama Lengkap</label>
-                            <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} />
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nama Lengkap</label>
+                                <input type="text" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">No. WhatsApp</label>
+                                <input type="tel" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="08xx-xxxx" value={formData.no_hp} onChange={(e) => setFormData({...formData, no_hp: e.target.value})} />
+                            </div>
                         </div>
+                        
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">No. WhatsApp</label>
-                            <input type="tel" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" placeholder="08xx-xxxx" value={formData.no_hp} onChange={(e) => setFormData({...formData, no_hp: e.target.value})} />
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Pilih Durasi Sewa</label>
+                            <div className="relative">
+                                <select 
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none appearance-none transition"
+                                    value={formData.durasi} 
+                                    onChange={(e) => setFormData({...formData, durasi: parseInt(e.target.value)})}
+                                >
+                                    {[...Array(12)].map((_, i) => (
+                                        <option key={i+1} value={i+1}>{i+1} Bulan</option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                    <span className="text-slate-400">▼</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" onClick={handleSubmitBooking} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition">Booking Sekarang</button>
+                    
+                    {/* KALKULATOR TOTAL HARGA OTOMATIS */}
+                    <div className="mt-8 p-5 bg-blue-50/50 rounded-2xl border border-blue-100 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500 opacity-5 rounded-full blur-xl"></div>
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pembayaran Pertama</span>
+                            <span className="text-xs font-bold bg-blue-100 text-blue-600 px-2 py-1 rounded-md">{formData.durasi} Bulan Sewa</span>
+                        </div>
+                        <div className="text-3xl font-black text-blue-700 tracking-tight">
+                            Rp {(parseInt(selectedType.harga_bulanan) * (formData.durasi || 1)).toLocaleString('id-ID')}
+                        </div>
+                    </div>
+
+                    <button type="button" onClick={handleSubmitBooking} className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition hover:-translate-y-1">
+                        Konfirmasi & Booking Sekarang
+                    </button>
                 </div>
             </div>
         </div>
