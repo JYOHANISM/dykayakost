@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, XCircle, Menu, X, User, BedDouble, Lock, CheckCircle, AlertCircle, Wifi, Utensils, Car, ShieldCheck } from 'lucide-react';
+import { MapPin, XCircle, Menu, X, User, BedDouble, Lock, CheckCircle, AlertCircle, Wifi, Utensils, Car, ShieldCheck, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
