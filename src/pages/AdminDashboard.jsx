@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Users, DollarSign, LogOut, CheckCircle, XCircle, Clock, UserCheck, Wallet, ArrowLeft, Trash2, Edit2, Wrench, PlusCircle, Printer, AlertTriangle, Calendar, Search, LayoutDashboard, Eye, Phone } from 'lucide-react';
+import { Home, Users, DollarSign, LogOut, Clock, UserCheck, Wallet, ArrowLeft, Trash2, Edit2, Wrench, PlusCircle, Printer, AlertTriangle, Calendar, Search, LayoutDashboard, Eye, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -106,10 +106,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-      {/* SIDEBAR */}
       <aside className="w-72 bg-slate-900 text-white hidden md:flex flex-col fixed h-full z-20 shadow-2xl">
         <div className="p-8 pb-4">
-            {/* FIX: Nama Brand & Sistem jadi Putih Polos */}
             <h1 className="text-2xl font-black text-white tracking-tighter uppercase">DYKAYA ADMIN</h1>
             <p className="text-xs text-white/60 mt-1 uppercase tracking-widest font-bold">Management System</p>
         </div>
@@ -147,7 +145,6 @@ const AdminDashboard = () => {
                     <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center"><AlertTriangle size={32}/></div>
                     <div><p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Keluhan Aktif</p><h3 className="text-3xl font-black text-slate-800">{complaints.filter(c => c.status === 'pending').length}</h3></div>
                 </div>
-                {/* FIX: Ganti Gradient jadi Solid Blue */}
                 <div className="bg-blue-600 p-6 rounded-3xl shadow-lg text-white flex items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><Wallet size={32}/></div>
                     <div><p className="text-blue-100 text-xs font-bold uppercase tracking-wider">Profit Bersih</p><h3 className="text-3xl font-black">Rp {(profit/1000000).toFixed(1)}Jt</h3></div>
@@ -155,7 +152,6 @@ const AdminDashboard = () => {
              </div>
         )}
 
-        {/* DATA KAMAR */}
         {activeTab === 'kamar' && (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
                 <div className="flex justify-between items-center p-6 border-b border-slate-100">
@@ -205,7 +201,6 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* DATA PENGHUNI */}
         {activeTab === 'penghuni' && (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
                 <table className="w-full text-left border-collapse">
@@ -242,14 +237,20 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* KELUHAN */}
+        {/* --- DIUBAH: NAMPILIN TANGGAL LAPORAN DI KELUHAN ADMIN --- */}
         {activeTab === 'keluhan' && (
             <div className="grid gap-4">
                 {complaints.map(c => (
                     <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
                         <div className="flex gap-4 items-start">
                             <div className="p-3 bg-rose-50 text-rose-500 rounded-xl mt-1"><AlertTriangle size={20}/></div>
-                            <div><h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4><p className="text-sm text-slate-500">{c.isi_keluhan}</p><div className="text-xs text-slate-400 mt-2 font-bold uppercase">{c.nama_lengkap} • Kamar {c.nomor_kamar}</div></div>
+                            <div>
+                                <h4 className="font-bold text-slate-800">{c.judul_keluhan}</h4>
+                                <p className="text-sm text-slate-500">{c.isi_keluhan}</p>
+                                <div className="text-xs text-slate-400 mt-2 font-bold uppercase flex items-center gap-2">
+                                    <UserCheck size={12}/> {c.nama_lengkap} • Kamar {c.nomor_kamar} • <Calendar size={12}/> {new Date(c.tanggal_lapor).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </div>
+                            </div>
                         </div>
                         {c.status !== 'selesai' ? (<button onClick={()=>handleStatusComplaint(c.id, 'selesai')} className="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold text-sm rounded-xl hover:bg-emerald-100">Selesaikan</button>) : <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai ✅</span>}
                     </div>
@@ -257,7 +258,6 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* KEUANGAN */}
         {activeTab === 'keuangan' && (
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 <div className="flex justify-between items-center mb-8"><h3 className="font-bold text-xl">Arus Kas</h3><div className="flex gap-2"><button onClick={openExpenseModal} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-800"><PlusCircle size={16}/> Catat Pengeluaran</button><button onClick={()=>window.print()} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200"><Printer size={16}/> Print</button></div></div>
@@ -266,7 +266,6 @@ const AdminDashboard = () => {
         )}
       </main>
 
-      {/* MODAL SECTION */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={()=>setModalConfig({...modalConfig, isOpen:false})}></div>

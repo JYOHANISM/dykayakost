@@ -7,8 +7,11 @@ const UserDashboard = () => {
   const [bill, setBill] = useState(null);
   const [loading, setLoading] = useState(true);
   
+  // --- STATE KELUHAN ---
   const [judulKeluhan, setJudulKeluhan] = useState('');
   const [isiKeluhan, setIsiKeluhan] = useState('');
+  // Set default tanggal hari ini (Format YYYY-MM-DD)
+  const [tanggalKeluhan, setTanggalKeluhan] = useState(new Date().toISOString().split('T')[0]);
   
   const [selectedBank, setSelectedBank] = useState(null); 
   const [copied, setCopied] = useState(false);
@@ -98,23 +101,25 @@ const UserDashboard = () => {
     }
   };
 
+  // --- DIUBAH: Mengirim data tanggalKeluhan ke API ---
   const kirimKeluhan = async (e) => {
     e.preventDefault();
-    if(!judulKeluhan || !isiKeluhan) { 
-        setModal({ isOpen: true, type: 'warning', title: 'Form Belum Lengkap', message: 'Isi semua data.' }); 
+    if(!judulKeluhan || !isiKeluhan || !tanggalKeluhan) { 
+        setModal({ isOpen: true, type: 'warning', title: 'Form Belum Lengkap', message: 'Isi semua data termasuk tanggal.' }); 
         return; 
     }
     try {
         const res = await fetch('/api/complaints', { 
             method: 'POST', 
             headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify({ user_id: userId, judul: judulKeluhan, isi: isiKeluhan }) 
+            body: JSON.stringify({ user_id: userId, judul: judulKeluhan, isi: isiKeluhan, tanggal: tanggalKeluhan }) 
         });
         const result = await res.json(); 
         if(result.status === "Success") { 
             setModal({ isOpen: true, type: 'success', title: 'Terkirim!', message: 'Admin akan segera mengecek laporan kamu.' }); 
             setJudulKeluhan(''); 
             setIsiKeluhan(''); 
+            // Tanggal biarin aja (gak usah di-reset)
         } else { 
             setModal({ isOpen: true, type: 'error', title: 'Gagal', message: result.message }); 
         }
@@ -219,13 +224,18 @@ const UserDashboard = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center"><div className="flex items-center gap-3 mb-4"><Home size={20} className="text-blue-600"/><h3 className="font-bold text-slate-800">Detail Kamar</h3></div><div className="flex gap-4"><div className="flex-1 bg-slate-50 p-4 rounded-2xl"><p className="text-xs text-slate-400 font-bold">Nomor</p><p className="text-xl font-bold text-slate-900">{bill.nomor_kamar}</p></div><div className="flex-1 bg-slate-50 p-4 rounded-2xl"><p className="text-xs text-slate-400 font-bold">Tipe</p><p className="text-xl font-bold text-slate-900">{bill.tipe_kamar}</p></div></div></div>
+                    
+                    {/* --- DIUBAH: TAMBAH INPUT TANGGAL --- */}
                     {bill.status_verifikasi === 'approved' && (
                         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                             <div className="flex items-center gap-3 mb-4"><Wrench size={20} className="text-amber-500"/><h3 className="font-bold text-slate-800">Lapor Kerusakan</h3></div>
                             <form onSubmit={kirimKeluhan} className="space-y-3">
-                                <input type="text" placeholder="Judul (Lampu Mati, dll)" className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={judulKeluhan} onChange={e => setJudulKeluhan(e.target.value)} />
                                 <div className="flex gap-2">
-                                    <input type="text" placeholder="Detail..." className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={isiKeluhan} onChange={e => setIsiKeluhan(e.target.value)}/>
+                                    <input type="date" title="Pilih Tanggal Kerusakan" className="w-1/3 bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition text-slate-600 font-medium" value={tanggalKeluhan} onChange={e => setTanggalKeluhan(e.target.value)} required />
+                                    <input type="text" placeholder="Judul (Contoh: Kipas Mati)" className="w-2/3 bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={judulKeluhan} onChange={e => setJudulKeluhan(e.target.value)} required />
+                                </div>
+                                <div className="flex gap-2">
+                                    <input type="text" placeholder="Detail keluhan (Tiba-tiba mati total...)" className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-200 outline-none transition" value={isiKeluhan} onChange={e => setIsiKeluhan(e.target.value)} required />
                                     <button type="submit" className="bg-amber-500 text-white px-4 rounded-xl shadow-lg hover:bg-amber-600 transition flex items-center justify-center">
                                         <Send size={18}/>
                                     </button>
@@ -252,7 +262,6 @@ const UserDashboard = () => {
         </div>
       )}
 
-      {/* MODAL NOTIFIKASI - CheckCircle & XCircle Berhasil Dihapus */}
       {modal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setModal({...modal, isOpen: false})}></div>

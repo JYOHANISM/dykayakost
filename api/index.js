@@ -257,8 +257,11 @@ app.get('/api/my-bill/:userId', (req, res) => {
 
 // 13. KELUHAN (USER & ADMIN)
 app.post('/api/complaints', (req, res) => {
-    const { user_id, judul, isi } = req.body;
-    db.query("INSERT INTO complaints (user_id, judul_keluhan, isi_keluhan) VALUES (?, ?, ?)", [user_id, judul, isi], (err) => {
+    // Tambahin 'tanggal' yang ditangkap dari frontend
+    const { user_id, judul, isi, tanggal } = req.body; 
+    
+    // Masukkan 'tanggal' ke dalam kolom 'tanggal_lapor' di database
+    db.query("INSERT INTO complaints (user_id, judul_keluhan, isi_keluhan, tanggal_lapor) VALUES (?, ?, ?, ?)", [user_id, judul, isi, tanggal], (err) => {
         if(err) return res.status(500).json(err);
         return res.json({ status: "Success" });
     });
