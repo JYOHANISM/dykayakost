@@ -1,8 +1,8 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-const nodemailer = require('nodemailer'); // TAMBAHAN: Import library email
-require('dotenv').config(); // TAMBAHAN: Buat baca file .env
+const nodemailer = require('nodemailer'); 
+require('dotenv').config(); 
 
 const app = express();
 
@@ -93,7 +93,7 @@ app.delete('/api/rooms/:id', (req, res) => {
     });
 });
 
-// 6. LOGIN (DIUBAH: ADA PENGECEKAN OTP)
+// 6. LOGIN 
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     db.query("SELECT * FROM users WHERE email = ? AND password = ?", [email, password], (err, data) => {
@@ -115,7 +115,7 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 7. REGISTER (DIUBAH: GENERATE OTP & KIRIM EMAIL)
+// 7. REGISTER 
 app.post('/api/register', (req, res) => {
     const { nama, email, password, no_hp } = req.body;
     if (!email || !password) return res.json({ status: "Fail", message: "Email/Password wajib diisi!" });
@@ -124,15 +124,12 @@ app.post('/api/register', (req, res) => {
         if (err) return res.status(500).json(err);
         if (data.length > 0) return res.json({ status: "Fail", message: "Email sudah terdaftar!" });
 
-        // Generate 4 digit angka acak (contoh: 8492)
         const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-        // Insert ke DB (tambah otp_code dan set is_verified = 0)
         const sql = "INSERT INTO users (nama_lengkap, email, password, no_hp, role, otp_code, is_verified) VALUES (?, ?, ?, ?, 'penyewa', ?, 0)";
         db.query(sql, [nama, email, password, no_hp, otpCode], (err) => {
             if (err) return res.status(500).json(err);
 
-            // Settingan Email OTP
             const mailOptions = {
                 from: process.env.EMAIL_USER,
                 to: email,
@@ -140,7 +137,6 @@ app.post('/api/register', (req, res) => {
                 text: `Halo ${nama},\n\nTerima kasih telah mendaftar di Kost Dykaya.\n\nKode OTP pendaftaran Anda adalah: ${otpCode}\n\nSilakan masukkan kode ini di aplikasi untuk mengaktifkan akun Anda.`
             };
 
-            // Kirim Emailnya
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
                     console.error("Gagal kirim email OTP:", error);
@@ -152,7 +148,7 @@ app.post('/api/register', (req, res) => {
     });
 });
 
-// 7.5. VERIFIKASI OTP (RUTE BARU)
+// 7.5. VERIFIKASI OTP 
 app.post('/api/verify-otp', (req, res) => {
     const { email, otp } = req.body;
 
@@ -164,7 +160,6 @@ app.post('/api/verify-otp', (req, res) => {
             return res.json({ status: "Fail", message: "Kode OTP salah atau email tidak ditemukan!" });
         }
 
-        // Kalau benar, aktifkan is_verified = 1 dan hapus otp_code
         const updateSql = "UPDATE users SET is_verified = 1, otp_code = NULL WHERE email = ?";
         db.query(updateSql, [email], (updateErr) => {
             if (updateErr) return res.status(500).json(updateErr);
@@ -190,7 +185,6 @@ app.get('/api/transactions', (req, res) => {
 app.post('/api/book', (req, res) => {
     const { nama, no_hp, room_id, tipe_kamar, user_id, durasi } = req.body;
     
-    // Kalau durasi nggak dipilih, anggap 1 Bulan
     const durasiSewa = durasi || 1; 
     const keterangan = `Booking ${tipe_kamar} (${durasiSewa} Bulan) a.n ${nama} (${no_hp})`;
     
@@ -202,7 +196,7 @@ app.post('/api/book', (req, res) => {
     });
 });
 
-// 12. GET MY BILL (USER)
+// 10. GET MY BILL (USER) - VERSI BENAR (DENGAN KALKULASI DURASI)
 app.get('/api/my-bill/:userId', (req, res) => {
     const sql = `
         SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
@@ -214,7 +208,6 @@ app.get('/api/my-bill/:userId', (req, res) => {
         if (err) return res.status(500).json(err);
         
         if (data.length > 0) {
-            // Kalikan harga sewa dengan durasi bulan biar tagihannya bener
             data[0].harga_bulanan = data[0].harga_bulanan * (data[0].durasi_sewa || 1);
             return res.json({ status: "Found", data: data[0] });
         } else {
@@ -239,26 +232,9 @@ app.delete('/api/transactions/:id', (req, res) => {
     });
 });
 
-// 12. GET MY BILL
-app.get('/api/my-bill/:userId', (req, res) => {
-    const sql = `
-        SELECT t.id as trans_id, t.status_verifikasi, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
-        DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY) as jatuh_tempo,
-        DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL 30 DAY), NOW()) as sisa_hari
-        FROM transactions t JOIN rooms r ON t.room_id = r.id
-        WHERE t.user_id = ? AND t.status_verifikasi != 'rejected' ORDER BY t.tanggal_transaksi DESC LIMIT 1`;
-    db.query(sql, [req.params.userId], (err, data) => {
-        if (err) return res.status(500).json(err);
-        return res.json(data.length > 0 ? { status: "Found", data: data[0] } : { status: "NoData" });
-    });
-});
-
-// 13. KELUHAN (USER & ADMIN)
+// 12. KELUHAN (USER & ADMIN)
 app.post('/api/complaints', (req, res) => {
-    // Tambahin 'tanggal' yang ditangkap dari frontend
     const { user_id, judul, isi, tanggal } = req.body; 
-    
-    // Masukkan 'tanggal' ke dalam kolom 'tanggal_lapor' di database
     db.query("INSERT INTO complaints (user_id, judul_keluhan, isi_keluhan, tanggal_lapor) VALUES (?, ?, ?, ?)", [user_id, judul, isi, tanggal], (err) => {
         if(err) return res.status(500).json(err);
         return res.json({ status: "Success" });
@@ -281,7 +257,6 @@ app.put('/api/complaints/:id', (req, res) => {
     });
 });
 
-// HAPUS KELUHAN
 app.delete('/api/complaints/:id', (req, res) => {
     db.query("DELETE FROM complaints WHERE id = ?", [req.params.id], (err) => {
         if(err) return res.status(500).json(err);
@@ -289,7 +264,7 @@ app.delete('/api/complaints/:id', (req, res) => {
     });
 });
 
-// 14. EXPENSES
+// 13. EXPENSES
 app.get('/api/expenses', (req, res) => {
     db.query("SELECT * FROM expenses ORDER BY tanggal_pengeluaran DESC", (err, data) => {
         if(err) return res.status(500).json(err);
@@ -302,6 +277,61 @@ app.post('/api/expenses', (req, res) => {
     db.query("INSERT INTO expenses (nama_pengeluaran, biaya, tanggal_pengeluaran) VALUES (?, ?, ?)", [nama, biaya, tanggal], (err) => {
         if(err) return res.status(500).json(err);
         return res.json({ status: "Success" });
+    });
+});
+
+// ==========================================
+// 14. MINTA OTP UNTUK RESET PASSWORD
+// ==========================================
+app.post('/api/request-reset-otp', (req, res) => {
+    const { email } = req.body;
+
+    db.query('SELECT * FROM users WHERE email = ?', [email], (err, data) => {
+        if (err) return res.status(500).json(err);
+        if (data.length === 0) return res.status(404).json({ status: "Failed", message: "Email tidak terdaftar!" });
+
+        const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+        db.query('UPDATE users SET otp_code = ? WHERE email = ?', [otpCode, email], (err) => {
+            if (err) return res.status(500).json(err);
+
+            const mailOptions = {
+                from: `"Kost Dykaya" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: 'Kode OTP Reset Password - Kost Dykaya',
+                html: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
+                        <h2>Reset Password Kost Dykaya</h2>
+                        <p>Seseorang meminta untuk mereset password akun Anda.</p>
+                        <p>Berikut adalah kode OTP Anda (JANGAN BERIKAN KE SIAPAPUN):</p>
+                        <h1 style="background: #f1f5f9; padding: 10px; letter-spacing: 5px; color: #2563eb;">${otpCode}</h1>
+                        <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+                    </div>
+                `
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) return res.status(500).json({ status: "Failed", message: "Gagal mengirim email OTP" });
+                return res.json({ status: "Success", message: "OTP Terkirim" });
+            });
+        });
+    });
+});
+
+// ==========================================
+// 15. VERIFIKASI OTP & SIMPAN PASSWORD BARU
+// ==========================================
+app.post('/api/reset-password', (req, res) => {
+    const { email, otp_code, new_password } = req.body;
+
+    db.query('SELECT * FROM users WHERE email = ? AND otp_code = ?', [email, otp_code], (err, data) => {
+        if (err) return res.status(500).json(err);
+        if (data.length === 0) return res.status(400).json({ status: "Failed", message: "Kode OTP Salah!" });
+
+        db.query('UPDATE users SET password = ?, otp_code = NULL WHERE email = ?', [new_password, email], (err) => {
+            if (err) return res.status(500).json(err);
+            return res.json({ status: "Success", message: "Password berhasil diubah" });
+        });
     });
 });
 
