@@ -134,6 +134,12 @@ const UserDashboard = () => {
     }
   };
 
+   // --- FUNGSI LOGOUT ---
+  const handleLogout = () => {
+    localStorage.clear(); // Hapus sesi/tiket login
+    navigate('/login');   // Lempar balik ke halaman login
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold animate-pulse">Memuat Data...</div>;
 
   return (
