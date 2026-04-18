@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Home, AlertCircle, ArrowLeft, Wrench, Send, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle } from 'lucide-react';
 import { LogOut, Calendar, Home, AlertCircle, ArrowLeft, Wrench, Send, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle, MessageCircle } from 'lucide-react';
 
 const UserDashboard = () => {
