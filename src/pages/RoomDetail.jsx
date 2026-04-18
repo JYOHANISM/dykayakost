@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, MessageCircle, MapPin, BedDouble, Wifi, AlertCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MessageCircle, MapPin, BedDouble, Wifi, AlertCircle, ShieldCheck, User } from 'lucide-react';
 
 const RoomDetail = () => {
   const { tipe } = useParams();
   const navigate = useNavigate();
+  const currentUser = localStorage.getItem('userName');
+  const userRole = localStorage.getItem('userRole');
+  const dashboardLink = userRole === 'admin' ? '/admin' : '/user';
   
   const [roomData, setRoomData] = useState(null);
   const [activePhoto, setActivePhoto] = useState(0);
@@ -72,7 +75,10 @@ const RoomDetail = () => {
     <div className="min-h-screen bg-slate-50 pb-32">
       {/* HEADER NAV */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-30 w-full">
-        <div className="max-w-4xl mx-auto px-4 h-20 flex items-center">
+        {/* Ditambahkan justify-between biar logo di kiri, menu di kanan */}
+        <div className="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
+            
+            {/* KIRI: LOGO DYKAYA SEBAGAI TOMBOL KEMBALI KE HOME */}
             <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left outline-none">
                 <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
                     <img src="/logo-baru.png" alt="Logo Dykaya" className="w-full h-full object-contain" />
@@ -82,6 +88,25 @@ const RoomDetail = () => {
                     <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
                 </div>
             </button>
+
+            {/* KANAN: MENU SEPERTI DI HALAMAN UTAMA */}
+            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500">
+                {/* Link ditambahkan garis miring "/" biar kembali ke halaman utama dulu */}
+                <a href="/" className="hover:text-blue-600">Beranda</a>
+                <a href="/#fasilitas" className="hover:text-blue-600">Fasilitas</a>
+                <a href="/#katalog" className="hover:text-blue-600">Katalog</a>
+                
+                {currentUser ? (
+                    <button onClick={() => navigate(dashboardLink)} className="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition ml-2">
+                        <User size={18} /> Halo, {currentUser.split(' ')[0]}
+                    </button>
+                ) : (
+                    <button onClick={() => navigate('/login')} className="bg-slate-900 text-white px-5 py-2.5 rounded-full hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 ml-2">
+                        Login Penghuni
+                    </button>
+                )}
+            </div>
+
         </div>
       </nav>
 
