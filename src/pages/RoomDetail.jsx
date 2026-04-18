@@ -60,9 +60,16 @@ const RoomDetail = () => {
             })
         });
         const result = await response.json();
-        if(result.status === "Success") setShowSuccess(true);
-        else setFormError("Gagal booking, coba lagi nanti.");
-    } catch (err) { setFormError("Error server!"); }
+        
+        // DIUBAH: Nangkep pesan error dari Backend (Gembok Booking Ganda)
+        if(result.status === "Success") {
+            setShowSuccess(true);
+        } else {
+            setFormError(result.message || "Gagal booking, coba lagi nanti.");
+        }
+    } catch (err) { 
+        setFormError("Error koneksi ke server!"); 
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-400">Memuat Data Kamar...</div>;
@@ -92,6 +99,9 @@ const RoomDetail = () => {
             {/* KANAN: MENU SEPERTI DI HALAMAN UTAMA */}
             <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500">
                 {/* Link ditambahkan garis miring "/" biar kembali ke halaman utama dulu */}
+                <a href="/" className="hover:text-blue-600">Beranda</a>
+                <a href="/#fasilitas" className="hover:text-blue-600">Fasilitas</a>
+                <a href="/#katalog" className="hover:text-blue-600">Katalog</a>
                 
                 {currentUser ? (
                     <button onClick={() => navigate(dashboardLink)} className="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition ml-2">
@@ -158,7 +168,7 @@ const RoomDetail = () => {
                     {!showBookingForm ? (
                         <div className="space-y-3">
                             <button onClick={() => setShowBookingForm(true)} className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition shadow-lg">Pesan Kamar Ini</button>
-                            <a href={`https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20tertarik%20dengan%20kamar%20tipe%20${roomData.tipe_kamar}.%20Bisa%20tanya-tanya%20dulu?`} target="_blank" className="w-full py-3.5 bg-emerald-50 text-emerald-600 font-bold rounded-xl hover:bg-emerald-100 transition flex justify-center items-center gap-2"><MessageCircle size={18}/> Tanya Admin</a>
+                            <a href={`https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20tertarik%20dengan%20kamar%20tipe%20${roomData.tipe_kamar}.%20Bisa%20tanya-tanya%20dulu?`} target="_blank" rel="noreferrer" className="w-full py-3.5 bg-emerald-50 text-emerald-600 font-bold rounded-xl hover:bg-emerald-100 transition flex justify-center items-center gap-2"><MessageCircle size={18}/> Tanya Admin</a>
                         </div>
                     ) : (
                         <div className="animate-fade-in space-y-4">

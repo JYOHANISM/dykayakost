@@ -187,15 +187,31 @@ app.get('/api/transactions', (req, res) => {
 app.post('/api/book', (req, res) => {
     const { nama, no_hp, room_id, tipe_kamar, user_id, durasi } = req.body;
     
-    const durasiSewa = durasi || 1; 
-    const keterangan = `Booking ${tipe_kamar} (${durasiSewa} Bulan) a.n ${nama} (${no_hp})`;
+    // CEK DULU: Apakah user sudah punya transaksi yang sedang berjalan?
+    // (Mencari transaksi yang belum ditolak)
+    const checkSql = "SELECT id FROM transactions WHERE user_id = ? AND status_verifikasi IN ('waiting_payment', 'verification', 'approved')";
     
-    // UBAH: Status langsung diset ke 'waiting_payment' (Bukan 'pending' lagi)
-    const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan, durasi_sewa) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'waiting_payment', ?, ?)";
-    
-    db.query(sql, [user_id, room_id, keterangan, durasiSewa], (err) => {
+    db.query(checkSql, [user_id], (err, data) => {
         if (err) return res.status(500).json(err);
-        return res.json({ status: "Success" });
+        
+        // JIKA ADA DATA (Artinya dia udah pesen kamar), TOLAK!
+        if (data.length > 0) {
+            return res.json({ 
+                status: "Fail", 
+                message: "Gagal: Anda sudah memiliki pesanan kamar yang sedang aktif!" 
+            });
+        }
+
+        // JIKA AMAN (Belum pernah pesen / pesanan lama udah rejected), LANJUTKAN BOOKING!
+        const durasiSewa = durasi || 1; 
+        const keterangan = `Booking ${tipe_kamar} (${durasiSewa} Bulan) a.n ${nama} (${no_hp})`;
+        
+        const insertSql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan, durasi_sewa) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'waiting_payment', ?, ?)";
+        
+        db.query(insertSql, [user_id, room_id, keterangan, durasiSewa], (insertErr) => {
+            if (insertErr) return res.status(500).json(insertErr);
+            return res.json({ status: "Success" });
+        });
     });
 });
 
