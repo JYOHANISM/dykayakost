@@ -240,11 +240,15 @@ const AdminDashboard = () => {
                             }
                             return (
                                 <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
-                                    <td className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">{item.nomor_kamar}</div><div className="text-[10px] font-bold text-slate-400 uppercase">{item.tipe_kamar}</div></div></td>
-                                    <td className="p-6"><div className="text-lg font-bold text-slate-800">{displayName}</div><div className="text-slate-500 text-xs">{displayPhone}</div></td>
                                     <td className="p-6">
-                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${item.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
-                                            {item.status_verifikasi === 'approved' ? `Lunas (${item.sisa_hari} Hari)` : item.status_verifikasi}
+                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                                            item.status_verifikasi === 'approved' 
+                                                ? (item.sisa_hari < 0 ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200') 
+                                                : 'bg-amber-100 text-amber-700 border-amber-200'
+                                        }`}>
+                                            {item.status_verifikasi === 'approved' 
+                                                ? (item.sisa_hari < 0 ? `Habis Sewa (Telat ${Math.abs(item.sisa_hari)} Hari)` : `Lunas (${item.sisa_hari} Hari)`) 
+                                                : item.status_verifikasi}
                                         </span>
                                     </td>
                                     <td className="p-6 flex justify-center gap-2">
