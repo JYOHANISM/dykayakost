@@ -194,7 +194,7 @@ const Home = () => {
                         disabled={type.stokTersedia === 0} 
                         className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${type.stokTersedia > 0 ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                   >
-                        {type.stokTersedia > 0 ? 'Lihat Spesifikasi & Pesan' : 'Stok Habis'}
+                        {type.stokTersedia > 0 ? 'Pesan Kamar Ini' : 'Stok Habis'}
                 </button>   
                 </div>
               </div>

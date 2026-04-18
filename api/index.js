@@ -200,7 +200,7 @@ app.post('/api/book', (req, res) => {
 // 10. GET MY BILL (USER) - VERSI BENAR (DENGAN KALKULASI DURASI)
 app.get('/api/my-bill/:userId', (req, res) => {
     const sql = `
-        SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
+        SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, t.tanggal_transaksi, r.id as room_id, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
         DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
         DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
         FROM transactions t JOIN rooms r ON t.room_id = r.id
@@ -214,6 +214,34 @@ app.get('/api/my-bill/:userId', (req, res) => {
         } else {
             return res.json({ status: "NoData" });
         }
+    });
+});
+
+// 10.5 GET HISTORY TRANSAKSI (USER)
+app.get('/api/history/:userId', (req, res) => {
+    const sql = `
+        SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, t.jenis_transaksi, t.tanggal_transaksi, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
+        DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
+        DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
+        FROM transactions t JOIN rooms r ON t.room_id = r.id
+        WHERE t.user_id = ? ORDER BY t.tanggal_transaksi DESC`;
+    db.query(sql, [req.params.userId], (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json(data);
+    });
+});
+
+// 10.6 POST PERPANJANG SEWA
+app.post('/api/extend', (req, res) => {
+    const { user_id, room_id, durasi, tipe_kamar, nama } = req.body;
+    const durasiSewa = durasi || 1; 
+    const keterangan = `Perpanjangan ${tipe_kamar} (${durasiSewa} Bulan) a.n ${nama}`;
+    
+    const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan, durasi_sewa) VALUES (?, ?, NOW(), 'perpanjangan', 0, '-', 'waiting_payment', ?, ?)";
+    
+    db.query(sql, [user_id, room_id, keterangan, durasiSewa], (err) => {
+        if (err) return res.status(500).json(err);
+        return res.json({ status: "Success" });
     });
 });
 
