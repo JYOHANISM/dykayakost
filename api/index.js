@@ -170,14 +170,13 @@ app.post('/api/verify-otp', (req, res) => {
 
 // 8. GET ALL TRANSACTIONS (ADMIN) DENGAN KALKULASI SISA HARI
 app.get('/api/transactions', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    
     const sql = `
-        SELECT t.*, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
+        SELECT t.*, t.id as id, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
         DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
         DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
-        FROM transactions t 
-        JOIN rooms r ON t.room_id = r.id 
-        ORDER BY t.tanggal_transaksi DESC
-    `;
+        FROM transactions t JOIN rooms r ON t.room_id = r.id ORDER BY t.tanggal_transaksi DESC`;
     db.query(sql, (err, data) => {
         if (err) return res.status(500).json(err);
         return res.json(data);
@@ -248,45 +247,55 @@ app.post('/api/extend', (req, res) => {
     });
 });
 
-// 11.5 UPDATE TRANSAKSI (USER/ADMIN)
+// 11. HAPUS TRANSAKSI
+app.delete('/api/transactions/:id', (req, res) => {
+    db.query("SELECT room_id FROM transactions WHERE id = ?", [req.params.id], (err, data) => {
+        if (data && data.length > 0) {
+            const rid = data[0].room_id;
+            db.query("DELETE FROM transactions WHERE id = ?", [req.params.id], (err) => {
+                if (err) return res.status(500).json(err);
+                // Kembalikan kamar jadi tersedia setelah transaksi dihapus
+                db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [rid]);
+                return res.json({ status: "Success" });
+            });
+        } else {
+            return res.status(404).json({ status: "Failed", message: "Data Not Found" });
+        }
+    });
+});
+
+// 11.5 UPDATE TRANSAKSI (USER/ADMIN) -> INI YANG KEMARIN HILANG BRO!
 app.put('/api/transactions/:id', (req, res) => {
     const { status, bukti_img } = req.body;
     const transactionId = req.params.id;
 
     if (bukti_img) {
-        // Skema 1: User upload bukti bayar
+        // User upload bukti TF
         db.query("UPDATE transactions SET status_verifikasi = ?, bukti_bayar = ? WHERE id = ?", [status, bukti_img, transactionId], (err) => {
             if (err) return res.status(500).json(err);
             return res.json({ status: "Success" });
         });
     } else if (status === 'approved') {
-        // Skema 2: Admin klik Terima (Approve)
+        // Admin klik TERIMA
         db.query("UPDATE transactions SET status_verifikasi = ?, tanggal_approve = NOW() WHERE id = ?", [status, transactionId], (err) => {
             if (err) return res.status(500).json(err);
-            
             // Otomatis ubah status kamar jadi 'terisi'
             db.query("SELECT room_id FROM transactions WHERE id = ?", [transactionId], (err2, data) => {
-                if(data.length > 0) {
-                    db.query("UPDATE rooms SET status = 'terisi' WHERE id = ?", [data[0].room_id]);
-                }
+                if(data.length > 0) db.query("UPDATE rooms SET status = 'terisi' WHERE id = ?", [data[0].room_id]);
             });
             return res.json({ status: "Success" });
         });
     } else if (status === 'rejected') {
-        // Skema 3: Admin tolak pesanan
+        // Admin klik TOLAK
         db.query("UPDATE transactions SET status_verifikasi = ? WHERE id = ?", [status, transactionId], (err) => {
             if (err) return res.status(500).json(err);
-            
-            // Otomatis balikin kamar jadi 'tersedia' lagi
+            // Otomatis balikin kamar jadi 'tersedia'
             db.query("SELECT room_id FROM transactions WHERE id = ?", [transactionId], (err2, data) => {
-                if(data.length > 0) {
-                    db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [data[0].room_id]);
-                }
+                if(data.length > 0) db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [data[0].room_id]);
             });
             return res.json({ status: "Success" });
         });
     } else {
-        // Skema 4: Update status biasa
         db.query("UPDATE transactions SET status_verifikasi = ? WHERE id = ?", [status, transactionId], (err) => {
             if (err) return res.status(500).json(err);
             return res.json({ status: "Success" });
