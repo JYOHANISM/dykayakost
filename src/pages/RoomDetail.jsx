@@ -72,9 +72,7 @@ const RoomDetail = () => {
     <div className="min-h-screen bg-slate-50 pb-32">
       {/* HEADER NAV */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-30 w-full">
-        {/* Ditambahkan max-w-6xl mx-auto biar sejajar sama Home */}
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center">
-            {/* LOGO DYKAYA SEBAGAI TOMBOL KEMBALI KE HOME */}
+        <div className="max-w-4xl mx-auto px-4 h-20 flex items-center">
             <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left outline-none">
                 <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
                     <img src="/logo-baru.png" alt="Logo Dykaya" className="w-full h-full object-contain" />
