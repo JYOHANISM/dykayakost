@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Calendar, Home, AlertCircle, ArrowLeft, Wrench, Send, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle } from 'lucide-react';
+import { LogOut, Calendar, Home, AlertCircle, ArrowLeft, Wrench, Send, AlertTriangle, CreditCard, Copy, Check, Upload, Clock, HelpCircle, MessageCircle } from 'lucide-react';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -284,6 +285,18 @@ const UserDashboard = () => {
             </div>
         </div>
       )}
+      {/* FLOATING WA BUTTON - CHAT ADMIN */}
+      <a 
+        href="https://wa.me/6281234567890?text=Halo%20Admin%20Kost%20Dykaya,%20saya%20butuh%20bantuan%20terkait%20kost." 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-2xl hover:bg-emerald-600 hover:-translate-y-1 transition-all z-40 flex items-center justify-center group"
+      >
+        <MessageCircle size={28} />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-3 transition-all duration-300 font-bold text-sm">
+            Chat Admin
+        </span>
+      </a>
     </div>
   );
 };

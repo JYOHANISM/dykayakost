@@ -188,7 +188,8 @@ app.post('/api/book', (req, res) => {
     const durasiSewa = durasi || 1; 
     const keterangan = `Booking ${tipe_kamar} (${durasiSewa} Bulan) a.n ${nama} (${no_hp})`;
     
-    const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan, durasi_sewa) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'pending', ?, ?)";
+    // UBAH: Status langsung diset ke 'waiting_payment' (Bukan 'pending' lagi)
+    const sql = "INSERT INTO transactions (user_id, room_id, tanggal_transaksi, jenis_transaksi, jumlah_bayar, bukti_bayar, status_verifikasi, keterangan, durasi_sewa) VALUES (?, ?, NOW(), 'booking_awal', 0, '-', 'waiting_payment', ?, ?)";
     
     db.query(sql, [user_id, room_id, keterangan, durasiSewa], (err) => {
         if (err) return res.status(500).json(err);

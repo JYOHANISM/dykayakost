@@ -249,7 +249,6 @@ const AdminDashboard = () => {
                                         </span>
                                     </td>
                                     <td className="p-6 flex justify-center gap-2">
-                                        {item.status_verifikasi === 'pending' && <button onClick={() => openStatusModal(item.id, 'waiting_payment')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Ada Kamar</button>}
                                         {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
                                             <><button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg"><Eye size={16}/></button><button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button></>
                                         )}

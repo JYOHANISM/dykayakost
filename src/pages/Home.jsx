@@ -11,6 +11,7 @@ const Home = () => {
   const [displayTypes, setDisplayTypes] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0); // Tambahan untuk revisi galeri foto
   
   // STATE POP-UP
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -66,6 +67,7 @@ const Home = () => {
     setSelectedType(typeData);
     setBookingTargetId(typeData.nextAvailableId);
     setFormError(''); 
+    setActivePhotoIndex(0);
     
     const savedName = localStorage.getItem('userName');
     // Set default durasi ke 1 Bulan saat buka modal
@@ -264,14 +266,35 @@ const Home = () => {
 
                 {/* KOLOM KIRI: INFO & GAMBAR KAMAR */}
                 <div className="w-full md:w-5/12 bg-slate-50 flex flex-col border-b md:border-b-0 md:border-r border-slate-200">
-                    <div className="h-48 md:h-64 w-full relative">
-                        <img src={selectedType.foto_kamar} alt={selectedType.tipe_kamar} className="w-full h-full object-cover" />
-                        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900/90 to-transparent p-6">
-                            <h3 className="text-2xl font-bold text-white mb-1">{selectedType.tipe_kamar}</h3>
-                            <p className="text-blue-300 font-bold">Rp {parseInt(selectedType.harga_bulanan).toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-300">/ bulan</span></p>
-                        </div>
-                    </div>
-                    <div className="p-6 flex-1 bg-slate-100/50">
+                    {/* Render Foto Berdasarkan Array */}
+                    {(() => {
+                        const photos = selectedType.foto_kamar ? selectedType.foto_kamar.split(',').map(url => url.trim()) : [''];
+                        return (
+                            <>
+                                {/* Foto Utama */}
+                                <div className="h-48 md:h-56 w-full relative">
+                                    <img src={photos[activePhotoIndex] || photos[0]} alt={selectedType.tipe_kamar} className="w-full h-full object-cover transition-all duration-300" />
+                                    <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900/90 to-transparent p-4">
+                                        <h3 className="text-xl font-bold text-white mb-1">{selectedType.tipe_kamar}</h3>
+                                        <p className="text-blue-300 font-bold">Rp {parseInt(selectedType.harga_bulanan).toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-300">/ bulan</span></p>
+                                    </div>
+                                </div>
+                                
+                                {/* Thumbnail Banyak Foto */}
+                                {photos.length > 1 && (
+                                    <div className="flex gap-2 p-3 overflow-x-auto bg-slate-100">
+                                        {photos.map((url, idx) => (
+                                            <button key={idx} onClick={() => setActivePhotoIndex(idx)} className={`w-16 h-12 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${activePhotoIndex === idx ? 'border-blue-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                                                <img src={url} className="w-full h-full object-cover" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        );
+                    })()}
+
+                    <div className="p-4 flex-1 bg-slate-100/50">
                         <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Fasilitas Unit Ini</h4>
                         <div className="flex flex-wrap gap-2">
                             {selectedType.fasilitas.split(',').map((feat, idx) => (
