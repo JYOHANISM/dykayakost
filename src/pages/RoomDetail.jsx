@@ -72,8 +72,19 @@ const RoomDetail = () => {
     <div className="min-h-screen bg-slate-50 pb-32">
       {/* HEADER NAV */}
       <nav className="bg-white px-6 py-4 border-b border-slate-200 sticky top-0 z-30 flex items-center gap-4">
-        <button onClick={() => navigate('/')} className="p-2 hover:bg-slate-100 rounded-full transition"><ArrowLeft size={20} /></button>
-        <h1 className="font-bold text-lg text-slate-800">Detail Kamar</h1>
+        <button onClick={() => navigate('/')} className="p-2 hover:bg-slate-100 rounded-full transition">
+            <ArrowLeft size={20} />
+        </button>
+        
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+                <img src="/logo-baru.png" alt="Logo Dykaya" className="w-full h-full object-contain" />
+            </div>
+            <div>
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1>
+                <p className="text-[9px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
+            </div>
+        </div>
       </nav>
 
       <div className="max-w-4xl mx-auto mt-6 px-4">
