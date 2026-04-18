@@ -182,7 +182,7 @@ const Home = () => {
             {displayTypes.map((type, index) => (
               <div key={index} className="group bg-white rounded-3xl p-3 border border-slate-100 shadow-xl shadow-slate-200/50 hover:shadow-2xl transition duration-300 relative">
                 <div className="relative h-64 rounded-2xl overflow-hidden mb-5">
-                  <img src={type.foto_kamar} alt={type.tipe_kamar} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                  <img src={type.foto_kamar ? type.foto_kamar.split(',')[0].trim() : ''} alt={type.tipe_kamar} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
                   <div className="absolute top-4 left-4"><span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider backdrop-blur-md border border-white/20 shadow-lg ${type.stokTersedia > 0 ? 'bg-emerald-500/90 text-white' : 'bg-rose-500/90 text-white'}`}>{type.stokTersedia > 0 ? `Tersedia (${type.stokTersedia} Unit)` : 'HABIS TERJUAL'}</span></div>
                   <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-slate-900 font-bold shadow-lg">Rp {parseInt(type.harga_bulanan).toLocaleString('id-ID')} / bln</div>
                 </div>
