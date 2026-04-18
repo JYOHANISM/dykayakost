@@ -225,43 +225,58 @@ const AdminDashboard = () => {
         {/* TAB DATA PENGHUNI (HANYA MENAMPILKAN YANG AKTIF / BELUM DITOLAK) */}
         {activeTab === 'penghuni' && (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 text-sm">
-                        {bookings.filter(b => b.status_verifikasi !== 'rejected').map(item => {
-                            let displayName = item.keterangan;
-                            let displayPhone = "";
-                            const match = item.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/) || item.keterangan?.match(/a\.n\s+(.*)/);
-                            if (match) { 
-                                displayName = match[1]; 
-                                displayPhone = match[2] || "Perpanjangan"; 
-                            }
-                            return (
-                                <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
-                                    <td className="p-6">
-                                        <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
-                                            item.status_verifikasi === 'approved' 
-                                                ? (item.sisa_hari < 0 ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200') 
-                                                : 'bg-amber-100 text-amber-700 border-amber-200'
-                                        }`}>
-                                            {item.status_verifikasi === 'approved' 
-                                                ? (item.sisa_hari < 0 ? `Habis Sewa (Telat ${Math.abs(item.sisa_hari)} Hari)` : `Lunas (${item.sisa_hari} Hari)`) 
-                                                : item.status_verifikasi}
-                                        </span>
-                                    </td>
-                                    <td className="p-6 flex justify-center gap-2">
-                                        {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
-                                            <><button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg"><Eye size={16}/></button><button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button></>
-                                        )}
-                                        <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                {/* FIX UI: Bungkus pakai div overflow biar tabel gak gepeng */}
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                        <thead className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                            <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 text-sm">
+                            {bookings.filter(b => b.status_verifikasi !== 'rejected').map(item => {
+                                let displayName = item.keterangan;
+                                let displayPhone = "";
+                                const match = item.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/) || item.keterangan?.match(/a\.n\s+(.*)/);
+                                if (match) { 
+                                    displayName = match[1]; 
+                                    displayPhone = match[2] || "Perpanjangan"; 
+                                }
+
+                                // FIX BUG TEXT: Hitung sisa hari manual biar gak "Lunas (null Hari)"
+                                let sisaHariCalc = item.sisa_hari;
+                                if (sisaHariCalc === undefined || sisaHariCalc === null) {
+                                    const start = new Date(item.tanggal_approve || item.tanggal_transaksi || Date.now());
+                                    const end = new Date(start);
+                                    end.setMonth(end.getMonth() + (item.durasi_sewa || 1));
+                                    sisaHariCalc = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+                                }
+
+                                return (
+                                    <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
+                                        <td className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">{item.nomor_kamar}</div><div className="text-[10px] font-bold text-slate-400 uppercase">{item.tipe_kamar}</div></div></td>
+                                        <td className="p-6"><div className="text-lg font-bold text-slate-800">{displayName}</div><div className="text-slate-500 text-xs">{displayPhone}</div></td>
+                                        <td className="p-6">
+                                            <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${item.status_verifikasi === 'approved' ? (sisaHariCalc < 0 ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200') : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
+                                                {item.status_verifikasi === 'approved' ? (sisaHariCalc < 0 ? `Habis Sewa (Telat ${Math.abs(sisaHariCalc)} Hari)` : `Lunas (${sisaHariCalc} Hari)`) : item.status_verifikasi}
+                                            </span>
+                                        </td>
+                                        {/* FIX UI: Tombol dibungkus <div> biar <td> gak rusak karena class flex */}
+                                        <td className="p-6">
+                                            <div className="flex justify-center gap-2">
+                                                {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
+                                                    <><button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><Eye size={16}/></button><button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button></>
+                                                )}
+                                                <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {bookings.filter(b => b.status_verifikasi !== 'rejected').length === 0 && (
+                                <tr><td colSpan="4" className="p-8 text-center text-slate-400 font-medium">Belum ada data penghuni aktif.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         )}
 
@@ -275,8 +290,10 @@ const AdminDashboard = () => {
                     </div>
                     <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><History size={24}/></div>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap border-collapse">
+
+                {/* FIX UI: Wrapper Overflow */}
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left text-sm whitespace-nowrap min-w-[800px] border-collapse">
                         <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-xs">
                             <tr>
                                 <th className="p-4 rounded-tl-xl">Tanggal</th>
@@ -292,6 +309,16 @@ const AdminDashboard = () => {
                                 let displayName = h.keterangan;
                                 const match = h.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/) || h.keterangan?.match(/a\.n\s+(.*)/);
                                 if (match) { displayName = match[1]; }
+
+                                // FIX BUG TEXT: Hitung manual dari frontend
+                                let sisaHariCalc = h.sisa_hari;
+                                if (sisaHariCalc === undefined || sisaHariCalc === null) {
+                                    const start = new Date(h.tanggal_approve || h.tanggal_transaksi || Date.now());
+                                    const end = new Date(start);
+                                    end.setMonth(end.getMonth() + (h.durasi_sewa || 1));
+                                    sisaHariCalc = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+                                }
+
                                 return (
                                 <tr key={'hist-'+h.id} className="hover:bg-slate-50 transition">
                                     <td className="p-4 font-medium text-slate-600">{new Date(h.tanggal_transaksi || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
@@ -306,13 +333,13 @@ const AdminDashboard = () => {
                                     <td className="p-4">
                                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${
                                             h.status_verifikasi === 'approved' 
-                                                ? (h.sisa_hari < 0 ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700') 
+                                                ? (sisaHariCalc < 0 ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700') 
                                                 : h.status_verifikasi === 'rejected' 
                                                     ? 'bg-rose-100 text-rose-700' 
                                                     : 'bg-amber-100 text-amber-700'
                                         }`}>
                                             {h.status_verifikasi === 'approved' 
-                                                ? (h.sisa_hari < 0 ? 'Expired / Selesai' : 'Lunas (Aktif)') 
+                                                ? (sisaHariCalc < 0 ? 'Expired / Selesai' : 'Lunas (Aktif)') 
                                                 : h.status_verifikasi}
                                         </span>
                                     </td>
