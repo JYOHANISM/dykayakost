@@ -304,8 +304,16 @@ const AdminDashboard = () => {
                                     <td className="p-4 font-black text-blue-600">{h.nomor_kamar}</td>
                                     <td className="p-4 font-medium">{h.durasi_sewa} Bulan</td>
                                     <td className="p-4">
-                                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${h.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700' : h.status_verifikasi === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
-                                            {h.status_verifikasi}
+                                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${
+                                            h.status_verifikasi === 'approved' 
+                                                ? (h.sisa_hari < 0 ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700') 
+                                                : h.status_verifikasi === 'rejected' 
+                                                    ? 'bg-rose-100 text-rose-700' 
+                                                    : 'bg-amber-100 text-amber-700'
+                                        }`}>
+                                            {h.status_verifikasi === 'approved' 
+                                                ? (h.sisa_hari < 0 ? 'Expired / Selesai' : 'Lunas (Aktif)') 
+                                                : h.status_verifikasi}
                                         </span>
                                     </td>
                                 </tr>
