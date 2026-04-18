@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Users, DollarSign, LogOut, Clock, UserCheck, Wallet, ArrowLeft, Trash2, Edit2, Wrench, PlusCircle, Printer, AlertTriangle, Calendar, Search, LayoutDashboard, Eye, Phone } from 'lucide-react';
+import { Home, Users, DollarSign, LogOut, Clock, UserCheck, Wallet, ArrowLeft, Trash2, Edit2, Wrench, PlusCircle, Printer, AlertTriangle, Calendar, Search, LayoutDashboard, Eye, Phone, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -26,8 +26,6 @@ const AdminDashboard = () => {
   // --- SATPAM ADMIN ---
   useEffect(() => { 
     const role = localStorage.getItem('userRole');
-    
-    // Kalau yang nyoba masuk BUKAN admin, tendang balik ke Beranda!
     if (role !== 'admin') {
         navigate('/');
     } else {
@@ -46,8 +44,6 @@ const AdminDashboard = () => {
   const openProofModal = (imgData) => { setModalConfig({ isOpen: true, type: 'view_proof', id: null, title: 'Bukti Pembayaran', message: 'Cek keaslian bukti transfer ini.', data: imgData }); };
   const openDeleteModal = (id, nama) => { setModalConfig({ isOpen: true, type: 'delete', id: id, title: 'Hapus Data?', message: `Hapus data "${nama}"?`, data: null }); };
   const openExpenseModal = () => { setNewExpense({ nama: '', biaya: '', tanggal: '' }); setModalConfig({ isOpen: true, type: 'expense', id: null, title: 'Catat Pengeluaran', message: '', data: null }); };
-
-  // --- TAMBAHAN: FUNGSI BUKA MODAL HAPUS KELUHAN ---
   const openDeleteComplaintModal = (id, judul) => { setModalConfig({ isOpen: true, type: 'delete_complaint', id: id, title: 'Hapus Keluhan?', message: `Yakin ingin menghapus keluhan "${judul}" secara permanen?`, data: null }); };
 
   const openAddRoomModal = () => { 
@@ -93,7 +89,6 @@ const AdminDashboard = () => {
         else if (type === 'edit_tipe') {
             await fetch('/api/rooms/update-tipe', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editTipe) });
         }
-        // --- TAMBAHAN: EKSEKUSI HAPUS KELUHAN KE BACKEND ---
         else if (type === 'delete_complaint') {
             await fetch(`/api/complaints/${id}`, { method: 'DELETE' });
         }
@@ -108,11 +103,7 @@ const AdminDashboard = () => {
 
   const handleStatusComplaint = async (id, status) => { 
     try {
-        const res = await fetch(`/api/complaints/${id}`, { 
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ status: status }) 
-        });
+        const res = await fetch(`/api/complaints/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
         const result = await res.json();
         if (result.status === "Success") fetchData(); 
     } catch (error) { console.error(error); }
@@ -120,14 +111,11 @@ const AdminDashboard = () => {
 
   const handleLogout = () => { localStorage.clear(); navigate('/login'); };
 
-  // --- FILTER KEUANGAN (HANYA NAMPILIN 30 HARI TERAKHIR) ---
   const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); // Set waktu jadi 1 bulan ke belakang
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); 
 
   const recentIncomes = bookings.filter(b => b.status_verifikasi === 'approved' && new Date(b.tanggal_transaksi) >= thirtyDaysAgo);
   const recentExpenses = expenses.filter(e => new Date(e.tanggal_pengeluaran) >= thirtyDaysAgo);
-
-  // Profit sekarang dihitung cuma dari pendapatan dan pengeluaran 1 bulan terakhir aja!
   const profit = recentIncomes.reduce((t, i) => t + parseInt(i.harga_bulanan || 0), 0) - recentExpenses.reduce((t, i) => t + parseInt(i.biaya || 0), 0);
 
   return (
@@ -138,7 +126,14 @@ const AdminDashboard = () => {
             <p className="text-xs text-white/60 mt-1 uppercase tracking-widest font-bold">Management System</p>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
-          {[ { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'kamar', label: 'Data Kamar', icon: Home }, { id: 'penghuni', label: 'Data Penghuni', icon: Users }, { id: 'keluhan', label: 'Keluhan', icon: Wrench, count: complaints.filter(c=>c.status==='pending').length }, { id: 'keuangan', label: 'Keuangan', icon: DollarSign } ].map((menu) => (
+          {[ 
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, 
+            { id: 'kamar', label: 'Data Kamar', icon: Home }, 
+            { id: 'penghuni', label: 'Data Penghuni', icon: Users }, 
+            { id: 'riwayat', label: 'Riwayat Sewa', icon: History }, /* TAMBAHAN TAB RIWAYAT */
+            { id: 'keluhan', label: 'Keluhan', icon: Wrench, count: complaints.filter(c=>c.status==='pending').length }, 
+            { id: 'keuangan', label: 'Keuangan', icon: DollarSign } 
+          ].map((menu) => (
             <button key={menu.id} onClick={() => setActiveTab(menu.id)} 
                 className={`w-full flex items-center px-5 py-4 rounded-xl transition-all duration-200 group ${activeTab === menu.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
                 <menu.icon size={20} className={`mr-3 ${activeTab === menu.id ? 'text-white' : 'text-slate-500 group-hover:text-white'}`}/> 
@@ -165,7 +160,7 @@ const AdminDashboard = () => {
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
                     <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><UserCheck size={32}/></div>
-                    <div><p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Permintaan Baru</p><h3 className="text-3xl font-black text-slate-800">{bookings.filter(b => b.status_verifikasi === 'pending').length}</h3></div>
+                    <div><p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Permintaan Baru</p><h3 className="text-3xl font-black text-slate-800">{bookings.filter(b => b.status_verifikasi === 'pending' || b.status_verifikasi === 'verification').length}</h3></div>
                 </div>
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
                     <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center"><AlertTriangle size={32}/></div>
@@ -227,6 +222,7 @@ const AdminDashboard = () => {
             </div>
         )}
 
+        {/* TAB DATA PENGHUNI (HANYA MENAMPILKAN YANG AKTIF / BELUM DITOLAK) */}
         {activeTab === 'penghuni' && (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
                 <table className="w-full text-left border-collapse">
@@ -234,11 +230,14 @@ const AdminDashboard = () => {
                         <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50 text-sm">
-                        {bookings.map(item => {
+                        {bookings.filter(b => b.status_verifikasi !== 'rejected').map(item => {
                             let displayName = item.keterangan;
                             let displayPhone = "";
-                            const match = item.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/);
-                            if (match) { displayName = match[1]; displayPhone = match[2]; }
+                            const match = item.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/) || item.keterangan?.match(/a\.n\s+(.*)/);
+                            if (match) { 
+                                displayName = match[1]; 
+                                displayPhone = match[2] || "Perpanjangan"; 
+                            }
                             return (
                                 <tr key={item.id} className="hover:bg-slate-50/80 transition duration-150">
                                     <td className="p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">{item.nomor_kamar}</div><div className="text-[10px] font-bold text-slate-400 uppercase">{item.tipe_kamar}</div></div></td>
@@ -262,7 +261,58 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* --- DIUBAH: ADA TOMBOL HAPUS (TRASH) DI SETIAP KELUHAN --- */}
+        {/* --- TAB BARU: RIWAYAT SEWA (HISTORY ADMIN) --- */}
+        {activeTab === 'riwayat' && (
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden p-6 animate-fade-in">
+                <div className="mb-6 flex justify-between items-end">
+                    <div>
+                        <h3 className="font-bold text-xl text-slate-800">Riwayat Transaksi & Sewa (Log Master)</h3>
+                        <p className="text-xs text-slate-500 mt-1">Semua rekam jejak pemesanan, perpanjangan, dan pesanan yang ditolak ada di sini.</p>
+                    </div>
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><History size={24}/></div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap border-collapse">
+                        <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-xs">
+                            <tr>
+                                <th className="p-4 rounded-tl-xl">Tanggal</th>
+                                <th className="p-4">Jenis Transaksi</th>
+                                <th className="p-4">Nama Penghuni</th>
+                                <th className="p-4">Kamar</th>
+                                <th className="p-4">Durasi</th>
+                                <th className="p-4 rounded-tr-xl">Status Akhir</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {bookings.map((h, i) => {
+                                let displayName = h.keterangan;
+                                const match = h.keterangan?.match(/a\.n\s+(.*?)\s+\((.*?)\)/) || h.keterangan?.match(/a\.n\s+(.*)/);
+                                if (match) { displayName = match[1]; }
+                                return (
+                                <tr key={'hist-'+h.id} className="hover:bg-slate-50 transition">
+                                    <td className="p-4 font-medium text-slate-600">{new Date(h.tanggal_transaksi || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                                    <td className="p-4">
+                                        <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                                            {h.jenis_transaksi === 'perpanjangan' ? 'Perpanjang' : 'Pesan Baru'}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 font-bold text-slate-800">{displayName}</td>
+                                    <td className="p-4 font-black text-blue-600">{h.nomor_kamar}</td>
+                                    <td className="p-4 font-medium">{h.durasi_sewa} Bulan</td>
+                                    <td className="p-4">
+                                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${h.status_verifikasi === 'approved' ? 'bg-emerald-100 text-emerald-700' : h.status_verifikasi === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {h.status_verifikasi}
+                                        </span>
+                                    </td>
+                                </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+
         {activeTab === 'keluhan' && (
             <div className="grid gap-4">
                 {complaints.length === 0 ? (
@@ -290,7 +340,6 @@ const AdminDashboard = () => {
                                 ) : (
                                     <span className="text-emerald-600 font-bold text-sm px-4 py-2 bg-emerald-50 rounded-xl">Selesai</span>
                                 )}
-                                {/* Tombol Hapus Keluhan */}
                                 <button onClick={() => openDeleteComplaintModal(c.id, c.judul_keluhan)} className="p-2 text-rose-400 bg-rose-50 rounded-xl hover:bg-rose-500 hover:text-white transition opacity-0 group-hover:opacity-100">
                                     <Trash2 size={18} />
                                 </button>
@@ -301,7 +350,6 @@ const AdminDashboard = () => {
             </div>
         )}
 
-        {/* --- DIUBAH: TABEL KEUANGAN MENGGUNAKAN DATA FILTER 30 HARI --- */}
         {activeTab === 'keuangan' && (
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 <div className="flex justify-between items-center mb-8">

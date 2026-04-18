@@ -158,7 +158,6 @@ const UserDashboard = () => {
 
         <div className="text-white mb-10">
             <h1 className="text-3xl font-extrabold mb-1">Halo, {userName}</h1>
-            <p className="text-slate-300 text-sm">Selamat datang di dashboard penghuni.</p>
         </div>
 
         {bill ? (
