@@ -92,9 +92,6 @@ const RoomDetail = () => {
             {/* KANAN: MENU SEPERTI DI HALAMAN UTAMA */}
             <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500">
                 {/* Link ditambahkan garis miring "/" biar kembali ke halaman utama dulu */}
-                <a href="/" className="hover:text-blue-600">Beranda</a>
-                <a href="/#fasilitas" className="hover:text-blue-600">Fasilitas</a>
-                <a href="/#katalog" className="hover:text-blue-600">Katalog</a>
                 
                 {currentUser ? (
                     <button onClick={() => navigate(dashboardLink)} className="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition ml-2">
