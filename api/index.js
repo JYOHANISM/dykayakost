@@ -168,13 +168,16 @@ app.post('/api/verify-otp', (req, res) => {
     });
 });
 
-// 8. TRANSAKSI (ADMIN)
+// 8. GET ALL TRANSACTIONS (ADMIN) DENGAN KALKULASI SISA HARI
 app.get('/api/transactions', (req, res) => {
     const sql = `
         SELECT t.*, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
         DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
         DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
-        FROM transactions t JOIN rooms r ON t.room_id = r.id ORDER BY t.tanggal_transaksi DESC`;
+        FROM transactions t 
+        JOIN rooms r ON t.room_id = r.id 
+        ORDER BY t.tanggal_transaksi DESC
+    `;
     db.query(sql, (err, data) => {
         if (err) return res.status(500).json(err);
         return res.json(data);
