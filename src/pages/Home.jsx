@@ -189,7 +189,13 @@ const Home = () => {
                 <div className="px-2 pb-2">
                   <h4 className="text-xl font-bold text-slate-900 mb-2">{type.tipe_kamar}</h4>
                   <div className="flex flex-wrap gap-2 mb-6"><span className="text-[10px] font-medium px-2 py-1 rounded bg-blue-50 text-blue-600 flex items-center gap-1"><BedDouble size={12}/> Total {type.totalStok} Kamar</span>{type.fasilitas.split(',').map((feat, idx) => (<span key={idx} className="text-[10px] font-medium px-2 py-1 rounded bg-slate-100 text-slate-600">{feat}</span>))}</div>
-                  <button onClick={() => type.stokTersedia > 0 && openBooking(type)} disabled={type.stokTersedia === 0} className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${type.stokTersedia > 0 ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>{type.stokTersedia > 0 ? 'Pilih Kamar Ini' : 'Stok Habis'}</button>
+                  <button 
+                        onClick={() => type.stokTersedia > 0 && navigate(`/kamar/${type.tipe_kamar}`)} 
+                        disabled={type.stokTersedia === 0} 
+                        className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${type.stokTersedia > 0 ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                  >
+                        {type.stokTersedia > 0 ? 'Lihat Spesifikasi & Pesan' : 'Stok Habis'}
+                </button>   
                 </div>
               </div>
             ))}

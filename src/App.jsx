@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import RoomDetail from './pages/RoomDetail';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -10,6 +11,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        <Route path="/kamar/:tipe" element={<RoomDetail />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
