@@ -71,17 +71,20 @@ const RoomDetail = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       {/* HEADER NAV */}
-      <nav className="bg-white px-6 py-4 border-b border-slate-200 sticky top-0 z-30 flex items-center">
-        {/* LOGO DYKAYA SEBAGAI TOMBOL KEMBALI KE HOME */}
-        <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left outline-none">
-            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
-                <img src="/logo-baru.png" alt="Logo Dykaya" className="w-full h-full object-contain" />
-            </div>
-            <div>
-                <h1 className="text-lg font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1>
-                <p className="text-[9px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
-            </div>
-        </button>
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-30 w-full">
+        {/* Ditambahkan max-w-6xl mx-auto biar sejajar sama Home */}
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center">
+            {/* LOGO DYKAYA SEBAGAI TOMBOL KEMBALI KE HOME */}
+            <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left outline-none">
+                <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+                    <img src="/logo-baru.png" alt="Logo Dykaya" className="w-full h-full object-contain" />
+                </div>
+                <div>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">KOST<span className="text-blue-600">DYKAYA</span></h1>
+                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">Comfort Living Space</p>
+                </div>
+            </button>
+        </div>
       </nav>
 
       <div className="max-w-4xl mx-auto mt-6 px-4">
