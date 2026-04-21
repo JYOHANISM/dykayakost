@@ -231,24 +231,15 @@ const AdminDashboard = () => {
         {/* TAB DATA PENGHUNI (HANYA MENAMPILKAN YANG AKTIF / BELUM DITOLAK) */}
         {activeTab === 'penghuni' && (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-                {/* FIX UI: Bungkus pakai div overflow biar tabel gak gepeng */}
                 <div className="overflow-x-auto w-full">
                     <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                         <thead className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                            <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
-                            <td className="p-6">
-                                            <div className="flex justify-center gap-2">
-                                                {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
-                                                    <>
-                                                        <button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><Eye size={16}/></button>
-                                                        <button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button>
-                                                        {/* TOMBOL TOLAK DITAMBAHKAN */}
-                                                        <button onClick={() => openStatusModal(item.id, 'rejected')} className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Tolak</button>
-                                                    </>
-                                                )}
-                                                <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
-                                            </div>
-                                        </td>
+                            <tr>
+                                <th className="p-6">Kamar</th>
+                                <th className="p-6">Data Penghuni</th>
+                                <th className="p-6">Status</th>
+                                <th className="p-6 text-center">Aksi</th>
+                            </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 text-sm">
                             {bookings.filter(b => b.status_verifikasi !== 'rejected').map(item => {
@@ -260,7 +251,7 @@ const AdminDashboard = () => {
                                     displayPhone = match[2] || "Perpanjangan"; 
                                 }
 
-                                // FIX BUG TEXT: Hitung sisa hari manual biar gak "Lunas (null Hari)"
+                                // Hitung sisa hari manual
                                 let sisaHariCalc = item.sisa_hari;
                                 if (sisaHariCalc === undefined || sisaHariCalc === null) {
                                     const start = new Date(item.tanggal_approve || item.tanggal_transaksi || Date.now());
@@ -278,11 +269,16 @@ const AdminDashboard = () => {
                                                 {item.status_verifikasi === 'approved' ? (sisaHariCalc < 0 ? `Habis Sewa (Telat ${Math.abs(sisaHariCalc)} Hari)` : `Lunas (${sisaHariCalc} Hari)`) : item.status_verifikasi}
                                             </span>
                                         </td>
-                                        {/* FIX UI: Tombol dibungkus <div> biar <td> gak rusak karena class flex */}
+                                        
+                                        {/* INI KODE AKSI YANG BENER (DI DALAM TBODY) */}
                                         <td className="p-6">
                                             <div className="flex justify-center gap-2">
                                                 {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
-                                                    <><button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><Eye size={16}/></button><button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button></>
+                                                    <>
+                                                        <button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><Eye size={16}/></button>
+                                                        <button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button>
+                                                        <button onClick={() => openStatusModal(item.id, 'rejected')} className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Tolak</button>
+                                                    </>
                                                 )}
                                                 <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
                                             </div>
