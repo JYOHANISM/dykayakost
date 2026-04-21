@@ -37,8 +37,9 @@ const AdminDashboard = () => {
     let title = '', msg = '';
     if (status === 'waiting_payment') { title = 'Konfirmasi Ketersediaan?'; msg = 'User akan diminta melakukan pembayaran.'; }
     else if (status === 'approved') { title = 'Terima Pembayaran?'; msg = 'Argo sewa akan DIMULAI dari sekarang.'; }
-    else if (status === 'rejected') { title = 'Tolak Pesanan?'; msg = 'Pesanan akan dibatalkan permanen.'; }
-    setModalConfig({ isOpen: true, type: status, id: id, title, message: msg, data: null });
+    else if (status === 'rejected') { title = 'Tolak Pesanan?'; msg = 'Pesanan akan dibatalkan permanen. Masukkan alasan penolakan di bawah:'; }
+    // Tambahin parameter data.inputReason buat nampung teks
+    setModalConfig({ isOpen: true, type: status, id: id, title, message: msg, data: { inputReason: '' } });
   };
 
   const openProofModal = (imgData) => { setModalConfig({ isOpen: true, type: 'view_proof', id: null, title: 'Bukti Pembayaran', message: 'Cek keaslian bukti transfer ini.', data: imgData }); };
@@ -69,8 +70,13 @@ const AdminDashboard = () => {
     
     try {
         if (['approved', 'waiting_payment', 'rejected'].includes(type)) {
-            await fetch(`/api/transactions/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: type}) });
-        } 
+            await fetch(`/api/transactions/${id}`, { 
+                method: 'PUT', 
+                headers: {'Content-Type':'application/json'}, 
+                // Kirim alasan_tolak kalau admin nolak
+                body: JSON.stringify({status: type, alasan_tolak: modalConfig.data?.inputReason }) 
+            });
+        }
         else if (type === 'delete') {
             await fetch(`/api/transactions/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
         } 
@@ -230,6 +236,19 @@ const AdminDashboard = () => {
                     <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                         <thead className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
                             <tr><th className="p-6">Kamar</th><th className="p-6">Data Penghuni</th><th className="p-6">Status</th><th className="p-6 text-center">Aksi</th></tr>
+                            <td className="p-6">
+                                            <div className="flex justify-center gap-2">
+                                                {(item.status_verifikasi === 'verification' || item.status_verifikasi === 'waiting_payment') && (
+                                                    <>
+                                                        <button onClick={() => openProofModal(item.bukti_bayar)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><Eye size={16}/></button>
+                                                        <button onClick={() => openStatusModal(item.id, 'approved')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Terima</button>
+                                                        {/* TOMBOL TOLAK DITAMBAHKAN */}
+                                                        <button onClick={() => openStatusModal(item.id, 'rejected')} className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Tolak</button>
+                                                    </>
+                                                )}
+                                                <button onClick={()=>openDeleteModal(item.id, item.keterangan)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
+                                            </div>
+                                        </td>
                         </thead>
                         <tbody className="divide-y divide-slate-50 text-sm">
                             {bookings.filter(b => b.status_verifikasi !== 'rejected').map(item => {
@@ -468,11 +487,14 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {modalConfig.type === 'expense' && (
-                    <div className="space-y-3 mb-6">
-                        <input className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Nama Pengeluaran" value={newExpense.nama} onChange={e=>setNewExpense({...newExpense, nama: e.target.value})}/>
-                        <input type="number" className="w-full bg-slate-50 border-0 p-4 rounded-xl" placeholder="Biaya (Rp)" value={newExpense.biaya} onChange={e=>setNewExpense({...newExpense, biaya: e.target.value})}/>
-                        <input type="date" className="w-full bg-slate-50 border-0 p-4 rounded-xl" value={newExpense.tanggal} onChange={e=>setNewExpense({...newExpense, tanggal: e.target.value})}/>
+                {modalConfig.type === 'rejected' && (
+                    <div className="mb-6 text-left">
+                        <textarea 
+                            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl text-sm outline-none focus:ring-2 focus:ring-rose-500" 
+                            placeholder="Contoh: Bukti transfer palsu / Kamar sudah penuh"
+                            value={modalConfig.data.inputReason} 
+                            onChange={e => setModalConfig({...modalConfig, data: { inputReason: e.target.value }})}
+                        ></textarea>
                     </div>
                 )}
 

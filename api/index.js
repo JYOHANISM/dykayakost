@@ -215,14 +215,14 @@ app.post('/api/book', (req, res) => {
     });
 });
 
-// 10. GET MY BILL (USER) - VERSI BENAR (DENGAN KALKULASI DURASI)
+// 10. GET MY BILL (USER) - VERSI BENAR (BISA LIHAT STATUS DITOLAK)
 app.get('/api/my-bill/:userId', (req, res) => {
     const sql = `
-        SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, t.tanggal_transaksi, r.id as room_id, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
+        SELECT t.id as trans_id, t.status_verifikasi, t.durasi_sewa, t.tanggal_transaksi, t.alasan_tolak, r.id as room_id, r.nomor_kamar, r.tipe_kamar, r.harga_bulanan,
         DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH) as jatuh_tempo,
         DATEDIFF(DATE_ADD(COALESCE(t.tanggal_approve, t.tanggal_transaksi), INTERVAL COALESCE(t.durasi_sewa, 1) MONTH), NOW()) as sisa_hari
         FROM transactions t JOIN rooms r ON t.room_id = r.id
-        WHERE t.user_id = ? AND t.status_verifikasi != 'rejected' ORDER BY t.tanggal_transaksi DESC LIMIT 1`;
+        WHERE t.user_id = ? ORDER BY t.tanggal_transaksi DESC LIMIT 1`;
     db.query(sql, [req.params.userId], (err, data) => {
         if (err) return res.status(500).json(err);
         
@@ -280,9 +280,9 @@ app.delete('/api/transactions/:id', (req, res) => {
     });
 });
 
-// 11.5 UPDATE TRANSAKSI (USER/ADMIN) -> INI YANG KEMARIN HILANG BRO!
+// 11.5 UPDATE TRANSAKSI (USER/ADMIN)
 app.put('/api/transactions/:id', (req, res) => {
-    const { status, bukti_img } = req.body;
+    const { status, bukti_img, alasan_tolak } = req.body; // Tambahin alasan_tolak disini
     const transactionId = req.params.id;
 
     if (bukti_img) {
@@ -295,17 +295,15 @@ app.put('/api/transactions/:id', (req, res) => {
         // Admin klik TERIMA
         db.query("UPDATE transactions SET status_verifikasi = ?, tanggal_approve = NOW() WHERE id = ?", [status, transactionId], (err) => {
             if (err) return res.status(500).json(err);
-            // Otomatis ubah status kamar jadi 'terisi'
             db.query("SELECT room_id FROM transactions WHERE id = ?", [transactionId], (err2, data) => {
                 if(data.length > 0) db.query("UPDATE rooms SET status = 'terisi' WHERE id = ?", [data[0].room_id]);
             });
             return res.json({ status: "Success" });
         });
     } else if (status === 'rejected') {
-        // Admin klik TOLAK
-        db.query("UPDATE transactions SET status_verifikasi = ? WHERE id = ?", [status, transactionId], (err) => {
+        // Admin klik TOLAK (Simpan alasan tolak ke DB)
+        db.query("UPDATE transactions SET status_verifikasi = ?, alasan_tolak = ? WHERE id = ?", [status, alasan_tolak || 'Ditolak oleh Admin', transactionId], (err) => {
             if (err) return res.status(500).json(err);
-            // Otomatis balikin kamar jadi 'tersedia'
             db.query("SELECT room_id FROM transactions WHERE id = ?", [transactionId], (err2, data) => {
                 if(data.length > 0) db.query("UPDATE rooms SET status = 'tersedia' WHERE id = ?", [data[0].room_id]);
             });

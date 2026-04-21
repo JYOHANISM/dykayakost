@@ -230,6 +230,31 @@ const UserDashboard = () => {
                                 </div>
                             </div>
                         )}
+                        {/* STATE 4: REJECTED (DITOLAK & REFUND) */}
+                        {bill.status_verifikasi === 'rejected' && (
+                            <div className="text-center py-6 animate-fade-in">
+                                <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertTriangle size={40} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Pembayaran Ditolak!</h2>
+                                <p className="text-slate-500 mb-6 text-sm">Mohon maaf, pesanan kamar Anda dibatalkan oleh Admin.</p>
+                                
+                                <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl text-left mb-4">
+                                    <p className="text-xs text-rose-400 font-bold uppercase tracking-wider mb-1">Alasan Penolakan:</p>
+                                    <p className="font-medium text-rose-800">{bill.alasan_tolak || "Pembayaran tidak valid atau kamar tidak tersedia."}</p>
+                                </div>
+                                
+                                <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-4 text-left">
+                                    <Clock className="text-amber-500 shrink-0" size={32} />
+                                    <div>
+                                        <p className="font-bold text-amber-800 text-sm">Dana Sedang Dikembalikan (Refund)</p>
+                                        <p className="text-xs text-amber-600 mt-1 leading-relaxed">Admin akan menghubungi Anda via WhatsApp atau dana akan otomatis dikembalikan ke rekening asal Anda dalam 1x24 jam kerja.</p>
+                                    </div>
+                                </div>
+                                
+                                <button onClick={() => setBill(null)} className="mt-8 w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 transition">Booking Kamar Lain</button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
